@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,6 +17,19 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //});
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-Route::middleware('auth:sanctum')->get('/refresh-token', [AuthController::class, 'refreshToken']);
+Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'login']);
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    // auth api
+    Route::get('/info', [\App\Http\Controllers\Admin\AuthController::class, 'info']);
+    Route::get('/refresh-token', [\App\Http\Controllers\Admin\AuthController::class, 'refreshToken']);
+    Route::post('/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout']);
+
+    Route::apiResource('app', \App\Http\Controllers\Admin\AppController::class);
+    Route::apiResource('redirect-url', \App\Http\Controllers\Admin\RedirectUrlController::class);
+
+    // option api
+    Route::get('/getRegionOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getRegionOptions']);
+    Route::get('/getChannelOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getChannelOptions']);
+    Route::get('/getSubmitStatusOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getSubmitStatusOptions']);
+});

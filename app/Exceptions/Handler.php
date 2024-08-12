@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -40,11 +42,14 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $e)
     {
         if ($e instanceof CodeException) {
-            return response()->json(['code' => $e->getErrCode(), 'message' => $e->getErrMsg()], $e->getHttpStatus());
+            return response()->json(['code' => $e->getErrCode(), 'msg' => $e->getErrMsg()], $e->getHttpStatus());
+        } else if ($e instanceof ModelNotFoundException) {
+            return response()->json(['code' => ErrorCode::DATA_NOT_FOUND, 'msg' => '数据不存在'], 404);
+        } else if ($e instanceof ValidationException) {
+            return response()->json(['code' => -1, 'msg' => $e->getMessage()], 400);
+        } else if ($e instanceof AuthenticationException) {
+            return response()->json(['code' => ErrorCode::INVALID_TOKEN, 'msg' => $e->getMessage()], 400);
         }
-        if ($e instanceof ValidationException) {
-            return response()->json(['code' => -1, 'message' => $e->getMessage()], 400);
-        }
-        return response()->json(['code' => -1, 'message' => $e->getMessage()], 500);
+        return response()->json(['code' => -1, 'msg' => $e->getMessage()], 500);
     }
 }

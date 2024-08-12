@@ -19,7 +19,7 @@ class Controller extends BaseController
         return response()->json(['code' => 0, 'msg' => $msg]);
     }
 
-    public function jsonDataResponse(array $data = null): JsonResponse
+    public function jsonDataResponse($data = null): JsonResponse
     {
         return response()->json(['code' => 0, 'msg' => 'SUCCESS', 'data' => $data]);
     }

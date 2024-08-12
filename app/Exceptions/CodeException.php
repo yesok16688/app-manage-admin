@@ -12,9 +12,9 @@ class CodeException extends Exception
 
     private $httpStatus;
 
-    public function __construct($errMsg, $httpStatus = 500, Throwable $previous = null)
+    public function __construct($errMsg, $errCode = -1, $httpStatus = 200, Throwable $previous = null)
     {
-        $this->setErrCode(-1);
+        $this->setErrCode($errCode);
         $this->setErrMsg($errMsg);
         $this->setHttpStatus($httpStatus);
         if($previous) {
