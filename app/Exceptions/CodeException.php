@@ -7,65 +7,26 @@ use Throwable;
 
 class CodeException extends Exception
 {
-    private $errCode;
-    private $errMsg;
-
-    private $httpStatus;
+    private int $httpStatus;
 
     public function __construct($errMsg, $errCode = -1, $httpStatus = 200, Throwable $previous = null)
     {
-        $this->setErrCode($errCode);
-        $this->setErrMsg($errMsg);
         $this->setHttpStatus($httpStatus);
-        if($previous) {
-            parent::__construct($previous->getMessage(), $previous->getCode(), $previous);
-        }
+        parent::__construct($errMsg, $errCode, $previous);
     }
 
     /**
-     * @return mixed
+     * @return int
      */
-    public function getErrCode()
-    {
-        return $this->errCode;
-    }
-
-    /**
-     * @param mixed $errCode
-     */
-    public function setErrCode($errCode): void
-    {
-        $this->errCode = $errCode;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getErrMsg()
-    {
-        return $this->errMsg;
-    }
-
-    /**
-     * @param mixed $errMsg
-     */
-    public function setErrMsg($errMsg): void
-    {
-        $this->errMsg = $errMsg;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getHttpStatus()
+    public function getHttpStatus(): int
     {
         return $this->httpStatus;
     }
 
     /**
-     * @param mixed $httpStatus
+     * @param int $httpStatus
      */
-    public function setHttpStatus($httpStatus): void
+    public function setHttpStatus(int $httpStatus): void
     {
         $this->httpStatus = $httpStatus;
     }

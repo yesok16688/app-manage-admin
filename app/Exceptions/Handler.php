@@ -5,6 +5,7 @@ namespace App\Exceptions;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -34,15 +35,20 @@ class Handler extends ExceptionHandler
     {
     }
 
-    public function report(Throwable $e)
+    public function report(Throwable $e): void
     {
-        Log::error($e);
+        if ($e instanceof ApiCallException) {
+            Log::error(sprintf("call api error: %s \n url=%s; params=%s; resp=%s \n",
+                $e->getMessage(), $e->getUrl(), $e->getParams(), $e->getMessage()), $e->getTrace());
+        } else {
+            Log::error($e);
+        }
     }
 
-    public function render($request, Throwable $e)
+    public function render($request, Throwable $e): JsonResponse
     {
         if ($e instanceof CodeException) {
-            return response()->json(['code' => $e->getErrCode(), 'msg' => $e->getErrMsg()], $e->getHttpStatus());
+            return response()->json(['code' => $e->getCode(), 'msg' => $e->getMessage()], $e->getHttpStatus());
         } else if ($e instanceof ModelNotFoundException) {
             return response()->json(['code' => ErrorCode::DATA_NOT_FOUND, 'msg' => '数据不存在'], 404);
         } else if ($e instanceof ValidationException) {

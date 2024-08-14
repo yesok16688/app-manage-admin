@@ -6,7 +6,7 @@ use App\Exceptions\CodeException;
 use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\RedirectUrl;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class RedirectUrlController extends Controller
@@ -17,10 +17,16 @@ class RedirectUrlController extends Controller
     public function index(Request $request)
     {
         $list = RedirectUrl::query()
-            ->when($request->get('group_code'), function(Builder $query, $groupCode) {
-                $query->where('group_code', $groupCode);
+            ->when($request->get('group_code'), function(Builder $query, $value) {
+                $query->where('group_code', $value);
             })
-            ->simplePaginate();
+            ->when($request->get('url'), function(Builder $query, $value) {
+                $query->where('url', 'like', "%$value%");
+            })
+            ->when(!is_null($request->get('is_enable')), function(Builder $query) {
+                $query->where('is_enable', request()->get('is_enable'));
+            })
+            ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'));
         return $this->jsonDataResponse($list);
     }
 
