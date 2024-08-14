@@ -16,5 +16,5 @@ return [
         4 => 'apple',
         5 => 'xiaomi',
         6 => 'oneplus',
-    ]
+    ],
 ];

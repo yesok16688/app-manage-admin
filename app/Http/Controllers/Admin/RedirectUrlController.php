@@ -21,7 +21,7 @@ class RedirectUrlController extends Controller
                 $query->where('group_code', $groupCode);
             })
             ->simplePaginate();
-        return $this->jsonResponse($list);
+        return $this->jsonDataResponse($list);
     }
 
     /**
@@ -34,6 +34,7 @@ class RedirectUrlController extends Controller
             'group_code' => 'required|max:50',
             'url' => 'required|url:http,https',
             'is_enable' => 'required|in:0,1',
+            'remark' => '',
         ]);
         RedirectUrl::create($data);
         return $this->jsonResponse();
@@ -57,6 +58,7 @@ class RedirectUrlController extends Controller
             'group_code' => 'max:50',
             'url' => 'url:http,https',
             'is_enable' => 'in:0,1',
+            'remark' => '',
         ]);
         $info = RedirectUrl::query()->findOrFail($id);
         $info->update($data);
@@ -69,9 +71,9 @@ class RedirectUrlController extends Controller
     public function destroy(string $id)
     {
         $info = RedirectUrl::query()->findOrFail($id);
-        $appInfo = App::query()->where('group_code', $info->group_code)->first();
+        $appInfo = App::query()->where('redirect_group_code', $info->group_code)->first();
         if($appInfo) {
-            throw new CodeException("group code : {$info->group_code} 正在使用中，无法删除");
+            throw new CodeException("分组代码：{$info->group_code} 正在使用中，请先解除应用绑定再操作");
         }
         $info->delete();
         return $this->jsonResponse();

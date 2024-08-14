@@ -4,23 +4,31 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enum\AppStatus;
 use App\Http\Controllers\Controller;
+use App\Models\RedirectUrl;
 
 class OptionController extends Controller
 {
-    public function getRegionOptions()
+    public function getOptions()
     {
-        $regions = config('common.region');
-        return $this->jsonDataResponse($regions);
+        $options = [
+            'common' => [
+                'region' => config('common.region'),
+                'channel' => config('common.channel')
+            ],
+            'app' => [
+                'submitStatus' => AppStatus::desc(),
+                'groupCodes' => $this->getRedirectGroupCodes(),
+            ]
+        ];
+        return $this->jsonDataResponse($options);
     }
 
-    public function getChannelOptions()
+    private function getRedirectGroupCodes()
     {
-        $channels = config('common.channel');
-        return $this->jsonDataResponse($channels);
-    }
-
-    public function getSubmitStatusOptions()
-    {
-        return $this->jsonDataResponse(AppStatus::desc());
+        $groupCodes = RedirectUrl::query()
+            ->where('is_enable', 1)
+            ->pluck('group_code', 'group_code')
+            ->toArray();
+        return $groupCodes;
     }
 }

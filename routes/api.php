@@ -29,7 +29,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('redirect-url', \App\Http\Controllers\Admin\RedirectUrlController::class);
 
     // option api
-    Route::get('/getRegionOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getRegionOptions']);
-    Route::get('/getChannelOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getChannelOptions']);
-    Route::get('/getSubmitStatusOptions', [\App\Http\Controllers\Admin\OptionController::class, 'getSubmitStatusOptions']);
+    Route::get('/init', [\App\Http\Controllers\Admin\OptionController::class, 'getOptions']);
 });

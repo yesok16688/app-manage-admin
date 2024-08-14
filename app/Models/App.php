@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class App extends Model
+class App extends Base
 {
     use HasFactory, SoftDeletes;
 
@@ -17,11 +17,7 @@ class App extends Model
         'channel',
         'submit_status',
         'enable_redirect',
-        'redirect_group_code'
+        'redirect_group_code',
+        'remark'
     ];
-
-    public function getStatusAttribute()
-    {
-
-    }
 }

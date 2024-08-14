@@ -39,13 +39,22 @@ class AppController extends Controller
 
     private function checkRedirect(?App $appInfo):bool
     {
+        $uniqCode = time() . rand(1000, 9999);
         if(!$appInfo) {
             return false;
         }
         if($appInfo->enable_redirect == 0) {
             return false;
         }
+        if(!$this->validateIp(request()->getClientIp())) {
+            return false;
+        }
+        return true;
+    }
 
+    private function validateIp(string $ip): bool
+    {
+        echo 'begin validating client ip: ' . $ip . "\n";
         return true;
     }
 }
