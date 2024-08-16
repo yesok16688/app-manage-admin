@@ -48,7 +48,7 @@ class AppController extends Controller
         $data = $request->validate([
             'name' => 'required',
             'api_key' => 'required',
-            'region' => 'required|in:' . join(',', array_keys(config('common.region'))),
+            'region' => 'required|exists:regions,iso_code',
             'channel' => 'required|in:' . join(',', array_keys(config('common.channel'))),
             'submit_status' => 'required|in:' . join(',', AppStatus::values()),
             'enable_redirect' => 'required|in:0,1',
@@ -76,7 +76,7 @@ class AppController extends Controller
         $data = $request->validate([
             'name' => '',
             'api_key' => '',
-            'region' => 'in:' . join(',', array_keys(config('common.region'))),
+            'region' => '|exists:regions,iso_code',
             'channel' => 'in:' . join(',', array_keys(config('common.channel'))),
             'submit_status' => 'in:' . join(',', AppStatus::values()),
             'enable_redirect' => 'in:0,1',

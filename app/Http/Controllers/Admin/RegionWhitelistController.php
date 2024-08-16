@@ -2,26 +2,22 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exceptions\CodeException;
 use App\Http\Controllers\Controller;
-use App\Models\App;
-use App\Models\RedirectUrl;
+use App\Models\RegionBlacklist;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
-class RedirectUrlController extends Controller
+class RegionWhitelistController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $list = RedirectUrl::query()
-            ->when($request->get('group_code'), function(Builder $query, $value) {
-                $query->where('group_code', $value);
-            })
-            ->when($request->get('url'), function(Builder $query, $value) {
-                $query->where('url', 'like', "%$value%");
+        $list = RegionBlacklist::query()
+            ->where('type', 1)
+            ->when($request->get('region_code'), function(Builder $query, $value) {
+                $query->where('region_code', $value);
             })
             ->when(!is_null($request->get('is_enable')), function(Builder $query) {
                 $query->where('is_enable', request()->get('is_enable'));
@@ -37,13 +33,13 @@ class RedirectUrlController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'required|integer',
-            'group_code' => 'required|max:50',
-            'url' => 'required|url:http,https',
+            'region_code' => 'required|max:2|exists:regions,iso_code',
+            'sub_region_codes' => 'array',
+            'sub_region_codes.*' => 'max:3|exists:sub_regions,iso_code',
             'is_enable' => 'required|in:0,1',
-            'remark' => '',
         ]);
-        RedirectUrl::create($data);
+        $data['type'] = 1;
+        RegionBlacklist::create($data);
         return $this->jsonResponse();
     }
 
@@ -52,7 +48,9 @@ class RedirectUrlController extends Controller
      */
     public function show(string $id)
     {
-        $info = RedirectUrl::query()->findOrFail($id);
+        $info = RegionBlacklist::query()
+            ->where('type', 1)
+            ->findOrFail($id);
         return $this->jsonResponse($info);
     }
 
@@ -62,13 +60,14 @@ class RedirectUrlController extends Controller
     public function update(Request $request, string $id)
     {
         $data = $request->validate([
-            'order' => 'integer',
-            'group_code' => 'max:50',
-            'url' => 'url:http,https',
+            'region_code' => 'max:2',
+            'sub_region_codes' => 'array',
+            'sub_region_codes.*' => 'max:3|exists:sub_regions,iso_code',
             'is_enable' => 'in:0,1',
-            'remark' => '',
         ]);
-        $info = RedirectUrl::query()->findOrFail($id);
+        $info = RegionBlacklist::query()
+            ->where('type', 1)
+            ->findOrFail($id);
         $info->update($data);
         return $this->jsonResponse();
     }
@@ -78,11 +77,9 @@ class RedirectUrlController extends Controller
      */
     public function destroy(string $id)
     {
-        $info = RedirectUrl::query()->findOrFail($id);
-        $appInfo = App::query()->where('redirect_group_code', $info->group_code)->first();
-        if($appInfo) {
-            throw new CodeException("分组代码：{$info->group_code} 正在使用中，请先解除应用绑定再操作");
-        }
+        $info = RegionBlacklist::query()
+            ->where('type', 1)
+            ->findOrFail($id);
         $info->delete();
         return $this->jsonResponse();
     }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Enum\AppStatus;
 use App\Http\Controllers\Controller;
 use App\Models\RedirectUrl;
+use App\Models\Region;
+use App\Models\SubRegion;
 
 class OptionController extends Controller
 {
@@ -12,7 +14,7 @@ class OptionController extends Controller
     {
         $options = [
             'common' => [
-                'region' => config('common.region'),
+                'region' => $this->getRegions(),
                 'channel' => config('common.channel')
             ],
             'app' => [
@@ -23,6 +25,16 @@ class OptionController extends Controller
         return $this->jsonDataResponse($options);
     }
 
+    public function getSubRegionOptions(String $regionCode)
+    {
+        $options = SubRegion::query()
+            ->where('region_code', $regionCode)
+            ->where('is_enable', 1)
+            ->pluck('name_en', 'iso_code')
+            ->toArray();
+        return $this->jsonDataResponse($options);
+    }
+
     private function getRedirectGroupCodes()
     {
         $groupCodes = RedirectUrl::query()
@@ -30,5 +42,13 @@ class OptionController extends Controller
             ->pluck('group_code', 'group_code')
             ->toArray();
         return $groupCodes;
+    }
+
+    private function getRegions()
+    {
+        return Region::query()
+            ->where('is_enable', 1)
+            ->pluck('name_cn', 'iso_code')
+            ->toArray();
     }
 }

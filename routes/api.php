@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AppController;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\OptionController;
+use App\Http\Controllers\Admin\RedirectUrlController;
+use App\Http\Controllers\Admin\RegionBlacklistController;
+use App\Http\Controllers\Admin\RegionWhitelistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,17 +23,20 @@ use Illuminate\Support\Facades\Route;
 //    return $request->user();
 //});
 
-Route::post('/login', [\App\Http\Controllers\Admin\AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware(['auth:sanctum'])->group(function () {
     // auth api
-    Route::get('/info', [\App\Http\Controllers\Admin\AuthController::class, 'info']);
-    Route::get('/refresh-token', [\App\Http\Controllers\Admin\AuthController::class, 'refreshToken']);
-    Route::post('/logout', [\App\Http\Controllers\Admin\AuthController::class, 'logout']);
+    Route::get('/info', [AuthController::class, 'info']);
+    Route::get('/refresh-token', [AuthController::class, 'refreshToken']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::apiResource('app', \App\Http\Controllers\Admin\AppController::class);
-    Route::apiResource('redirect-url', \App\Http\Controllers\Admin\RedirectUrlController::class);
+    Route::apiResource('app', AppController::class);
+    Route::apiResource('redirect-url', RedirectUrlController::class);
+    Route::apiResource('region-blacklist', RegionBlacklistController::class);
+    Route::apiResource('region-whitelist', RegionWhitelistController::class);
 
     // option api
-    Route::get('/init', [\App\Http\Controllers\Admin\OptionController::class, 'getOptions']);
+    Route::get('/init', [OptionController::class, 'getOptions']);
+    Route::get('/sub-region-options/{region_code}', [OptionController::class, 'getSubRegionOptions']);
 });

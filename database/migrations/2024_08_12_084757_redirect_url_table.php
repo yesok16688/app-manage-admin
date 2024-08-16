@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('redirect_urls', function (Blueprint $table) {
             $table->id();
+            $table->unsignedInteger('order')->default(0)->comment('优先级,数值越大优先级越低');
             $table->string('group_code', 50)->index('idx_code')->comment('分组码');
             $table->string('url', 256)->default('')->comment('跳转链接');
             $table->unsignedTinyInteger('is_enable')->default(1)->comment('是否启用：0=否；1=是');
