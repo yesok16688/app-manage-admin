@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\RedirectUrlController;
 use App\Http\Controllers\Admin\RegionBlacklistController;
 use App\Http\Controllers\Admin\RegionWhitelistController;
+use App\Http\Controllers\Admin\UrlHandleLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,6 +36,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('redirect-url', RedirectUrlController::class);
     Route::apiResource('region-blacklist', RegionBlacklistController::class);
     Route::apiResource('region-whitelist', RegionWhitelistController::class);
+
+    Route::get('url-handle-log', [UrlHandleLogController::class, 'index']);
+    Route::get('url-handle-log/{id}', [UrlHandleLogController::class, 'show']);
+    Route::delete('url-handle-log', [UrlHandleLogController::class, 'destroy']);
+    Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle']);
 
     // option api
     Route::get('/init', [OptionController::class, 'getOptions']);

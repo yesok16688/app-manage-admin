@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enum\AppStatus;
+use App\Enum\UrlHandleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\RedirectUrl;
 use App\Models\Region;
@@ -20,6 +21,7 @@ class OptionController extends Controller
             'app' => [
                 'submitStatus' => AppStatus::desc(),
                 'groupCodes' => $this->getRedirectGroupCodes(),
+                'handleStatus' => UrlHandleStatus::desc(),
             ]
         ];
         return $this->jsonDataResponse($options);

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\App;
 
+use App\Enum\UrlHandleStatus;
 use App\Exceptions\ApiCallException;
 use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\RedirectUrl;
 use App\Models\RegionBlacklist;
+use App\Models\UrlHandleLog;
 use App\Utils\IPUtils\IPUtil;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
@@ -15,16 +17,28 @@ use Illuminate\Support\Facades\Log;
 
 class AppController extends Controller
 {
-    private Model $appInfo;
+    private ?Model $appInfo;
+
+    public function __construct(Request $request)
+    {
+        $apiKey = $request->json('api_key');
+        $this->appInfo = App::query()->where('api_key', $apiKey)->first();
+    }
 
     /**
      * @throws ApiCallException
      */
-    public function init(Request $request): JsonResponse
+    public function init(): JsonResponse
     {
         $status = 1;
-        $apiKey = $request->header('x-api-key');
-        $this->appInfo = $appInfo = App::query()->where('api_key', $apiKey)->first();
+        $info = [
+            'status' => $status,
+            'redirect_urls' => [],
+        ];
+        $appInfo = $this->appInfo;
+        if(empty($this->appInfo)) {
+            return $this->jsonDataResponse($info);
+        }
         $enableRedirect = $this->checkRedirect($appInfo);
         $redirectUrls = [];
         if($enableRedirect) {
@@ -32,20 +46,122 @@ class AppController extends Controller
             $redirectUrls = RedirectUrl::query()
                 ->where('group_code', $appInfo->redirect_group_code)
                 ->where('is_enable', 1)
-                ->orderBy('order')
-                ->limit(5)
-                ->get()
-                ->pluck('url');
+                ->where('type', 1)
+                ->get(['id', 'url', 'check_url'])
+                ->toArray();
         }
 
-        $info = [
-            'status' => $status,
-            'redirect_url' => $redirectUrls,
-            'name' => '',   // 迷惑字段
-            'language' => 'us', // 迷惑字段
-            'config' => [], // 迷惑字段
-        ];
+        $info['status'] = $status;
+        $info['redirect_urls'] = $redirectUrls;
         return $this->jsonDataResponse($info);
+    }
+
+    /**
+     * 刷新A链接
+     * @param Request $request
+     * @return JsonResponse
+     * @throws ApiCallException
+     */
+    public function refresh(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'invalid_list' => 'array',
+            'invalid_list.*.id' => 'integer|exists:redirect_urls,id',
+            'invalid_list.*.http_status' => 'integer',
+            'invalid_list.*.remark' => ''
+        ], [
+            'invalid_list.*.id' => 'url is not exists',
+        ]);
+
+        // 保存上报记录
+        $clientIP = $request->getClientIp();
+        try {
+            $ipLocation = IPUtil::getLocation($clientIP);
+        } catch (ApiCallException $exception) {
+            $ipLocation = null;
+        }
+        $invalidList = $data['invalid_list'];
+        $logs = [];
+        foreach($invalidList as $invalidItem) {
+            $logs[] = [
+                'url_id' => $invalidItem['id'],
+                'http_status' => $invalidItem['http_status'] ?? 0,
+                'status' => UrlHandleStatus::CREATED->value,
+                'client_ip' => $clientIP,
+                'client_ip_region' => $ipLocation ? $ipLocation->getCountryCode() : '',
+                'client_ip_sub_region' => $ipLocation ? $ipLocation->getRegionCode() : '',
+            ];
+        }
+        if($logs) {
+            UrlHandleLog::insert($logs);
+        }
+
+        $redirectUrls = RedirectUrl::query()
+            ->where('group_code', $this->appInfo->redirect_group_code)
+            ->where('is_enable', 1)
+            ->where('type', 0)
+            ->get(['id', 'url', 'is_reserved'])
+            ->toArray();
+
+        $info = [
+            'api_urls' => [],
+            'api_reserved_urls' => []
+        ];
+        foreach($redirectUrls as $redirectUrl) {
+            $item = [
+                'id' => $redirectUrl['id'],
+                'url' => $redirectUrl['url']
+            ];
+            if($redirectUrl['is_reserved'] == 0) {
+                $info['api_urls'][] = $item;
+            } else {
+                $info['api_reserved_urls'][] = $item;
+            }
+        }
+        return $this->jsonDataResponse($info);
+    }
+
+    /**
+     * 刷新B链接
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function tag(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'invalid_list' => 'array',
+            'invalid_list.*.id' => 'integer|exists:redirect_urls,id',
+            'invalid_list.*.http_status' => 'integer',
+            'invalid_list.*.remark' => ''
+        ], [
+            'invalid_list.*.id' => 'url is not exists',
+        ]);
+
+        // 保存上报记录
+        $clientIP = $request->getClientIp();
+        try {
+            $ipLocation = IPUtil::getLocation($clientIP);
+        } catch (ApiCallException $exception) {
+            $ipLocation = null;
+        }
+        $invalidList = $data['invalid_list'];
+        $logs = [];
+        foreach($invalidList as $invalidItem) {
+            $logs[] = [
+                'url_id' => $invalidItem['id'],
+                'http_status' => $invalidItem['http_status'] ?? 0,
+                'status' => UrlHandleStatus::CREATED->value,
+                'client_ip' => $clientIP,
+                'client_ip_region' => $ipLocation ? $ipLocation->getCountryCode() : '',
+                'client_ip_sub_region' => $ipLocation ? $ipLocation->getRegionCode() : '',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+        }
+        if($logs) {
+            UrlHandleLog::insert($logs);
+        }
+        return $this->jsonResponse();
     }
 
     /**
@@ -72,11 +188,11 @@ class AppController extends Controller
     {
         //$ip = '172.105.62.113';
         // 印度非禁区
-        // $ip = '103.116.26.17';
+        $ip = '103.116.26.17';
         // 印度禁区
         // $ip = '103.107.37.148';
         // 越南
-        $ip = '14.178.106.226';
+        //$ip = '14.178.106.226';
         // 马来
         //$ip = '175.141.26.50';
         Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);

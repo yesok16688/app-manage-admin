@@ -11,10 +11,12 @@ class RedirectUrl extends Base
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'order',
+        'type',
         'group_code',
         'url',
+        'check_url',
         'is_enable',
+        'is_reserved',
         'remark'
     ];
 }

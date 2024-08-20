@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enum\UrlHandleStatus;
 use App\Exceptions\CodeException;
 use App\Http\Controllers\Controller;
 use App\Models\App;
@@ -17,6 +18,7 @@ class RedirectUrlController extends Controller
     public function index(Request $request)
     {
         $list = RedirectUrl::query()
+            ->where('type', $request->get('type'))
             ->when($request->get('group_code'), function(Builder $query, $value) {
                 $query->where('group_code', $value);
             })
@@ -25,6 +27,9 @@ class RedirectUrlController extends Controller
             })
             ->when(!is_null($request->get('is_enable')), function(Builder $query) {
                 $query->where('is_enable', request()->get('is_enable'));
+            })
+            ->when(!is_null($request->get('is_reserved')), function(Builder $query) {
+                $query->where('is_reserved', request()->get('is_reserved'));
             })
             ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'));
         return $this->jsonDataResponse($list);
@@ -37,10 +42,12 @@ class RedirectUrlController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'order' => 'required|integer',
+            'type' => 'required|in:0,1',
             'group_code' => 'required|max:50',
             'url' => 'required|url:http,https',
+            'check_url' => 'required_if:type,1|url:http,https',
             'is_enable' => 'required|in:0,1',
+            'is_reserved' => 'required|in:0,1',
             'remark' => '',
         ]);
         RedirectUrl::create($data);
@@ -65,7 +72,9 @@ class RedirectUrlController extends Controller
             'order' => 'integer',
             'group_code' => 'max:50',
             'url' => 'url:http,https',
+            'check_url' => 'url:http,https',
             'is_enable' => 'in:0,1',
+            'is_reserved' => 'in:0,1',
             'remark' => '',
         ]);
         $info = RedirectUrl::query()->findOrFail($id);
