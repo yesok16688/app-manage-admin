@@ -12,7 +12,7 @@ class Demo extends Command
      *
      * @var string
      */
-    protected $signature = 'app:demo';
+    protected $signature = 'demo';
 
     /**
      * The console command description.

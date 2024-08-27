@@ -74,7 +74,6 @@ class AppController extends Controller
         ], [
             'invalid_list.*.id' => 'url is not exists',
         ]);
-
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
@@ -98,10 +97,11 @@ class AppController extends Controller
             UrlHandleLog::insert($logs);
         }
 
-        $redirectUrls = AppUrl::query()
-            ->where('group_code', $this->appInfo->redirect_group_code)
+        $appInfo = $request->input('app_info');
+        $apiUrls = AppUrl::query()
+            ->where('app_id', $appInfo['app']['id'])
             ->where('is_enable', 1)
-            ->where('type', 0)
+            ->where('type', AppUrl::TYPE_A)
             ->get(['id', 'url', 'is_reserved'])
             ->toArray();
 
@@ -109,12 +109,12 @@ class AppController extends Controller
             'api_urls' => [],
             'api_reserved_urls' => []
         ];
-        foreach($redirectUrls as $redirectUrl) {
+        foreach($apiUrls as $apiUrl) {
             $item = [
-                'id' => $redirectUrl['id'],
-                'url' => $redirectUrl['url']
+                'id' => $apiUrl['id'],
+                'url' => $apiUrl['url']
             ];
-            if($redirectUrl['is_reserved'] == 0) {
+            if($apiUrl['is_reserved'] == 0) {
                 $info['api_urls'][] = $item;
             } else {
                 $info['api_reserved_urls'][] = $item;
