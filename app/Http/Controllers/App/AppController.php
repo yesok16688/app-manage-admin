@@ -210,7 +210,7 @@ class AppController extends Controller
         // 越南
         //$ip = '14.178.106.226';
         // 马来
-        $ip = '175.141.26.50';
+        //$ip = '175.141.26.50';
 
         // 检查IP黑名单
         if ($this->appInfo['ip_blacklist'] && in_array($ip, $this->appInfo['ip_blacklist'])) {
