@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('app_urls')) {
+            return;
+        }
         Schema::create('app_urls', function (Blueprint $table) {
             $table->id()->comment('ID');
             $table->bigInteger('app_id')->default(0)->index('idx_app')->comment('应用ID');

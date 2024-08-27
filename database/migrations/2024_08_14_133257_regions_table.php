@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('regions')) {
+            return;
+        }
         Schema::create('regions', function (Blueprint $table) {
             $table->id();
             $table->string('iso_code', 2)->default('')->unique('uniq_iso_code')->comment('二字简码');

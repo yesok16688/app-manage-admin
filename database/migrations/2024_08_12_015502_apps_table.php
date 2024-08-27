@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('apps')) {
+            return;
+        }
         Schema::create('apps', function (Blueprint $table) {
             $table->id();
             // 归档字段

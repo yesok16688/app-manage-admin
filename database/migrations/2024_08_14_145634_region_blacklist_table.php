@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('region_blacklists')) {
+            return;
+        }
         Schema::create('region_blacklists', function (Blueprint $table) {
             $table->id();
             $table->unsignedTinyInteger('type')->default(0)->comment('类型：0=黑名单；1=白名单');

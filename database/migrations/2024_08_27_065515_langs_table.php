@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('langs')) {
+            return;
+        }
         Schema::create('langs', function (Blueprint $table) {
             $table->id()->comment('ID');
             $table->string('lang_code', 50)->default('')->comment('应用名称');

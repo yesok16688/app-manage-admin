@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('sub_regions')) {
+            return;
+        }
         Schema::create('sub_regions', function (Blueprint $table) {
             $table->id();
             $table->string('region_code', 2)->default('')->comment('地区简码');

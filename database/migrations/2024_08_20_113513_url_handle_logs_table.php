@@ -11,6 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if(Schema::hasTable('url_handle_logs')) {
+            return;
+        }
         Schema::create('url_handle_logs', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('url_id')->default(0)->comment('对应redirect_url表id');
