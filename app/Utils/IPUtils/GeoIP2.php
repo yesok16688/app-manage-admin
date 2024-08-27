@@ -38,7 +38,9 @@ class GeoIP2
         $info = new IPLocateInfo();
         $info->setIp($ip);
         $info->setCountryCode($response->country->isoCode);
-        $info->setRegionCode(isset($response->subdivisions[0]) ? $response->subdivisions[0]->isoCode : '');
+        if(isset($response->subdivisions[0]) && $response->subdivisions[0]->isoCode) {
+            $info->setRegionCode($response->subdivisions[0]->isoCode);
+        }
         $info->setRegionName(isset($response->subdivisions[0]) ? $response->subdivisions[0]->names['en'] : '');
         $info->setCity($response->city->names['en']);
         return $info;
