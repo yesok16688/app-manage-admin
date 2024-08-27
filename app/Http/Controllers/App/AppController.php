@@ -2,55 +2,57 @@
 
 namespace App\Http\Controllers\App;
 
+use App\Enum\AppStatus;
 use App\Enum\UrlHandleStatus;
 use App\Exceptions\ApiCallException;
 use App\Http\Controllers\Controller;
-use App\Models\App;
-use App\Models\RedirectUrl;
-use App\Models\RegionBlacklist;
+use App\Logics\AppLogic;
+use App\Models\AppUrl;
+use App\Models\AppVersion;
 use App\Models\UrlHandleLog;
 use App\Utils\IPUtils\IPUtil;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AppController extends Controller
 {
-    private ?Model $appInfo;
-
-    public function __construct(Request $request)
-    {
-        $apiKey = $request->json('api_key');
-        $this->appInfo = App::query()->where('api_key', $apiKey)->first();
-    }
+    private $appInfo;
 
     /**
      * @throws ApiCallException
      */
-    public function init(): JsonResponse
+    public function init(Request $request): JsonResponse
     {
+        $appInfo = $this->appInfo = $request->input('app_info');
         $status = 1;
         $info = [
             'status' => $status,
             'redirect_urls' => [],
+            'latest_version' => '0.0.0',
+            'upgrade_mode' => AppVersion::UPGRADE_MODE_IGNORE,
+            'app_url' => '',
         ];
-        $appInfo = $this->appInfo;
-        if(empty($this->appInfo)) {
+        if(empty($appInfo)) {
             return $this->jsonDataResponse($info);
+        }
+        $latestVersion = app(AppLogic::class)->getLatestVersionByAppId($appInfo['app']['id']);
+        if($latestVersion) {
+            $info['latest_version'] = $latestVersion['version'] ?? '0.0.0';
+            $info['upgrade_mode'] = $latestVersion['upgrade_mode'] ?? AppVersion::UPGRADE_MODE_IGNORE;
+            $info['app_url'] = $latestVersion['download_link'] ?? '';
         }
         $enableRedirect = $this->checkRedirect($appInfo);
         $redirectUrls = [];
         if($enableRedirect) {
-            $status = 99;
-            $redirectUrls = RedirectUrl::query()
-                ->where('group_code', $appInfo->redirect_group_code)
+            $status = 99;   // 与客户端约定的开启跳转的状态码
+            $redirectUrls = AppUrl::query()
+                ->where('app_id', $appInfo['app_id'])
                 ->where('is_enable', 1)
-                ->where('type', 1)
+                ->where('type', AppUrl::TYPE_B)
                 ->get(['id', 'url', 'check_url'])
                 ->toArray();
         }
-
         $info['status'] = $status;
         $info['redirect_urls'] = $redirectUrls;
         return $this->jsonDataResponse($info);
@@ -96,7 +98,7 @@ class AppController extends Controller
             UrlHandleLog::insert($logs);
         }
 
-        $redirectUrls = RedirectUrl::query()
+        $redirectUrls = AppUrl::query()
             ->where('group_code', $this->appInfo->redirect_group_code)
             ->where('is_enable', 1)
             ->where('type', 0)
@@ -167,15 +169,28 @@ class AppController extends Controller
     /**
      * @throws ApiCallException
      */
-    private function checkRedirect(?App $appInfo):bool
+    private function checkRedirect($appInfo):bool
     {
-        if(!$appInfo) {
+        $clientIP = request()->ip();
+        // IP白名单可以直接打开跳转
+        if($appInfo['ip_whitelist'] && in_array($clientIP, $appInfo['ip_whitelist'])) {
+            return true;
+        }
+        // 强制不跳转
+        if($appInfo['disable_jump']) {
             return false;
         }
-        if($appInfo->enable_redirect == 0) {
+        // 审核中强制不跳转
+        if($appInfo['status'] == AppStatus::CHECKING) {
             return false;
         }
-        if(!$this->validateIPLocation(request()->ip())) {
+        // 手机语言黑名单
+        $langCode = request()->input('lang_code');
+        if($appInfo['lang_blacklist'] && in_array($langCode, $appInfo['lang_blacklist'])) {
+            return false;
+        }
+        // 检测IP限制
+        if(!$this->validateIPLocation($clientIP)) {
             return false;
         }
         return true;
@@ -186,50 +201,70 @@ class AppController extends Controller
      */
     private function validateIPLocation(string $ip): bool
     {
-        //$ip = '172.105.62.113';
+
+        // $ip = '172.105.62.113';
         // 印度非禁区
-        $ip = '103.116.26.17';
+        // $ip = '103.116.26.17';
         // 印度禁区
         // $ip = '103.107.37.148';
         // 越南
         //$ip = '14.178.106.226';
         // 马来
-        //$ip = '175.141.26.50';
-        Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);
-        $ipLocation = IPUtil::getLocation($ip);
-        Log::info('validating ip:' . $ip . '; location=' . $ipLocation->getCountryCode() . ':' . $ipLocation->getRegionCode() . '(' . $ipLocation->getRegionName() . ')');
-        $blacklist = RegionBlacklist::query()
-            ->where('region_code', $this->appInfo->region)
-            ->where('is_enable', 1)
-            ->get(['type', 'region_code', 'sub_region_codes'])
-            ->keyBy('type')
-            ->sortKeys()
-            ->toArray();
-        if(!$blacklist) {
+        $ip = '175.141.26.50';
+
+        // 检查IP黑名单
+        if ($this->appInfo['ip_blacklist'] && in_array($ip, $this->appInfo['ip_blacklist'])) {
+            return false;
+        }
+
+        // 检查是否需要判断IP仅限上架地区访问
+        if(!$this->appInfo['is_region_limit']) {
             return true;
         }
-        $blackResult = true;
-        $whiteResult = true;
-        foreach($blacklist as $type => $item) {
-            $regionCode = $item['region_code'];
-            $subRegionCodes = $item['sub_region_codes'];
-            // 校验黑名单
-            // 1. 子地区为空则表示整个地区都列入黑名单
-            // 2. 子地区不为空则校验子地区是否包含
-            if($type == 0 && $regionCode == $ipLocation->getCountryCode() &&
-                (empty($subRegionCodes) || in_array($ipLocation->getRegionCode(), $subRegionCodes))) {
-                Log::info('validating ip: match blacklist');
-                $blackResult = false;
-            }
-            // 校验白名单
-            // 1. 子地区为空则整个地区都列入白名单
-            // 2. 子地区不为空则校验子地区是否包含
-            if($type == 1 && ($regionCode != $ipLocation->getCountryCode() ||
-                    (!empty($subRegionCodes) && !in_array($ipLocation->getRegionCode(), $subRegionCodes)))) {
-                Log::info('validating ip: not in whitelist');
-                $whiteResult = false;
-            }
+
+        //Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);
+        $ipLocation = IPUtil::getLocation($ip);
+        if(!$ipLocation) {
+            Log::info('validating ip:' . $ip . '; ip not found');
+            return false;
         }
-        return $blackResult && $whiteResult;
+        Log::info('validating ip:' . $ip . '; location=' . $ipLocation->getCountryCode() . ':' . $ipLocation->getRegionCode() . '(' . $ipLocation->getRegionName() . ')');
+
+        // 校验IP是否在上架地区列表中
+        $regionCodes = $this->appInfo['app']['region_codes'];
+        return $regionCodes && in_array($ipLocation->getCountryCode(), $regionCodes);
+//        $blacklist = RegionBlacklist::query()
+//            ->where('region_code', $this->appInfo->region)
+//            ->where('is_enable', 1)
+//            ->get(['type', 'region_code', 'sub_region_codes'])
+//            ->keyBy('type')
+//            ->sortKeys()
+//            ->toArray();
+//        if(!$blacklist) {
+//            return true;
+//        }
+//        $blackResult = true;
+//        $whiteResult = true;
+//        foreach($blacklist as $type => $item) {
+//            $regionCode = $item['region_code'];
+//            $subRegionCodes = $item['sub_region_codes'];
+//            // 校验黑名单
+//            // 1. 子地区为空则表示整个地区都列入黑名单
+//            // 2. 子地区不为空则校验子地区是否包含
+//            if($type == 0 && $regionCode == $ipLocation->getCountryCode() &&
+//                (empty($subRegionCodes) || in_array($ipLocation->getRegionCode(), $subRegionCodes))) {
+//                Log::info('validating ip: match blacklist');
+//                $blackResult = false;
+//            }
+//            // 校验白名单
+//            // 1. 子地区为空则整个地区都列入白名单
+//            // 2. 子地区不为空则校验子地区是否包含
+//            if($type == 1 && ($regionCode != $ipLocation->getCountryCode() ||
+//                    (!empty($subRegionCodes) && !in_array($ipLocation->getRegionCode(), $subRegionCodes)))) {
+//                Log::info('validating ip: not in whitelist');
+//                $whiteResult = false;
+//            }
+//        }
+//        return $blackResult && $whiteResult;
     }
 }

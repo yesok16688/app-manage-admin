@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class App extends Base
@@ -12,12 +11,18 @@ class App extends Base
 
     protected $fillable = [
         'name',
-        'api_key',
-        'region',
+        'region_codes',
         'channel',
-        'submit_status',
-        'enable_redirect',
-        'redirect_group_code',
         'remark'
     ];
+
+    public function setRegionCodesAttribute($value)
+    {
+        $this->attributes['region_codes'] = is_array($value) ? join(',', $value) : $value;
+    }
+
+    public function getRegionCodesAttribute($value)
+    {
+        return $value ? explode(',', $value) : $value;
+    }
 }

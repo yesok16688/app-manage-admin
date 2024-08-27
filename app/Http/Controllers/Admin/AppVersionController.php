@@ -10,7 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AppController extends Controller
+class AppVersionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -39,9 +39,10 @@ class AppController extends Controller
     {
         $data = $request->validate([
             'name' => 'required',
-            'region_codes' => 'required|array',
-            'region_codes.*' => 'required|exists:regions,iso_code',
+            'api_key' => 'required',
+            'region' => 'required|exists:regions,iso_code',
             'channel' => 'required|in:' . join(',', array_keys(config('common.channel'))),
+            'submit_status' => 'required|in:' . join(',', AppStatus::values()),
             'enable_redirect' => 'required|in:0,1',
             'redirect_group_code' => 'required_if:enable_redirect,1|exclude_unless:enable_redirect,1|exists:redirect_urls,group_code',
             'remark' => '',

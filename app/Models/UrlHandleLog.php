@@ -20,6 +20,6 @@ class UrlHandleLog extends Base
 
     public function url()
     {
-        return $this->hasOne(RedirectUrl::class, 'id', 'url_id');
+        return $this->hasOne(AppUrl::class, 'id', 'url_id');
     }
 }

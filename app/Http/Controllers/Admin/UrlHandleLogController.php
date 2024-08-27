@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\RedirectUrl;
+use App\Models\AppUrl;
 use App\Models\UrlHandleLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -86,7 +86,7 @@ class UrlHandleLogController extends Controller
         if ($data['status'] == 1) {
             $urlEnable = 1;
         }
-        $url = RedirectUrl::query()->findOrFail($data['url_id']);
+        $url = AppUrl::query()->findOrFail($data['url_id']);
         $url->update(['is_enable' => $urlEnable]);
         return $this->jsonResponse();
     }

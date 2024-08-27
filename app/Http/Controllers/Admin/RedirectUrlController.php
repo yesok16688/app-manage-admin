@@ -6,7 +6,7 @@ use App\Enum\UrlHandleStatus;
 use App\Exceptions\CodeException;
 use App\Http\Controllers\Controller;
 use App\Models\App;
-use App\Models\RedirectUrl;
+use App\Models\AppUrl;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
@@ -17,7 +17,7 @@ class RedirectUrlController extends Controller
      */
     public function index(Request $request)
     {
-        $list = RedirectUrl::query()
+        $list = AppUrl::query()
             ->where('type', $request->get('type'))
             ->when($request->get('group_code'), function(Builder $query, $value) {
                 $query->where('group_code', $value);
@@ -50,7 +50,7 @@ class RedirectUrlController extends Controller
             'is_reserved' => 'required|in:0,1',
             'remark' => '',
         ]);
-        RedirectUrl::create($data);
+        AppUrl::create($data);
         return $this->jsonResponse();
     }
 
@@ -59,7 +59,7 @@ class RedirectUrlController extends Controller
      */
     public function show(string $id)
     {
-        $info = RedirectUrl::query()->findOrFail($id);
+        $info = AppUrl::query()->findOrFail($id);
         return $this->jsonResponse($info);
     }
 
@@ -77,7 +77,7 @@ class RedirectUrlController extends Controller
             'is_reserved' => 'in:0,1',
             'remark' => '',
         ]);
-        $info = RedirectUrl::query()->findOrFail($id);
+        $info = AppUrl::query()->findOrFail($id);
         $info->update($data);
         return $this->jsonResponse();
     }
@@ -87,7 +87,7 @@ class RedirectUrlController extends Controller
      */
     public function destroy(string $id)
     {
-        $info = RedirectUrl::query()->findOrFail($id);
+        $info = AppUrl::query()->findOrFail($id);
         $appInfo = App::query()->where('redirect_group_code', $info->group_code)->first();
         if($appInfo) {
             throw new CodeException("分组代码：{$info->group_code} 正在使用中，请先解除应用绑定再操作");

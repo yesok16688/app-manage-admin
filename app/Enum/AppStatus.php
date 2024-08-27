@@ -16,12 +16,12 @@ enum AppStatus: int
     public static function desc(): array
     {
         return [
-            AppStatus::UN_SUBMIT->value => '未提审',
+            AppStatus::UN_SUBMIT->value => '待提审',
             AppStatus::CHECKING->value => '审核中',
-            AppStatus::PASSED->value => '已通过',
-            AppStatus::REJECTED->value => '已驳回',
-            AppStatus::PUBLISH->value => '已上架',
-            AppStatus::UNPUBLISH->value => '已下架',
+            AppStatus::PASSED->value => '上架成功',
+            AppStatus::REJECTED->value => '被驳回',
+            AppStatus::PUBLISH->value => '投放中',
+            AppStatus::UNPUBLISH->value => '被下架',
         ];
     }
 }
