@@ -9,9 +9,8 @@ use App\Exceptions\ApiCallException;
 use App\Http\Controllers\Controller;
 use App\Logics\AppLogic;
 use App\Models\AppUrl;
-use App\Models\AppVersion;
 use App\Models\UrlHandleLog;
-use App\Utils\IPUtils\UploadUtil;
+use App\Utils\IPUtils\IPUtil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -227,7 +226,7 @@ class AppController extends Controller
         }
 
         //Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);
-        $ipLocation = UploadUtil::getLocation($ip);
+        $ipLocation = IPUtil::getLocation($ip);
         if(!$ipLocation) {
             Log::info('validating ip:' . $ip . '; ip not found');
             return false;
