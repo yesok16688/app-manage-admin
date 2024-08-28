@@ -24,6 +24,7 @@ class UploadUtil
         $filePath = "{$mode}/{$datePath}/$saveName";
         Storage::put($filePath, file_get_contents($uploadedFile));
         $fileSaveInfo = new File([
+            'id' => $uuid,
             'file_name' => $saveName,
             'save_path' => $filePath,
             'origin_name' => $uploadedFile->getClientOriginalName(),

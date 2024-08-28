@@ -189,9 +189,14 @@ class AppController extends Controller
         }
         // 手机语言黑名单
         $langCode = request()->input('lang_code');
-        if($appInfo['lang_blacklist'] && in_array($langCode, $appInfo['lang_blacklist'])) {
+        if(!$langCode || ($appInfo['lang_blacklist'] && in_array($langCode, $appInfo['lang_blacklist']))) {
             return false;
         }
+        $deviceId = request()->input('device_id');
+        if(!$deviceId || ($appInfo['device_blacklist'] && in_array($deviceId, $appInfo['device_blacklist']))) {
+            return false;
+        }
+
         // 检测IP限制
         if(!$this->validateIPLocation($clientIP)) {
             return false;

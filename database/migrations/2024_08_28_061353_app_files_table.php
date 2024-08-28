@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::create('app_files', function (Blueprint $table) {
             $table->id()->comment('ID');
             $table->unsignedInteger('version_id')->default(0)->comment('应用版本ID');
-            $table->unsignedInteger('file_id')->default(0)->comment('文件ID');
+            $table->uuid('file_id')->default(0)->comment('文件ID');
             $table->timestamps();
             $table->softDeletes();
         });

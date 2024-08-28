@@ -5,9 +5,9 @@ namespace App\Exceptions;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -45,7 +45,7 @@ class Handler extends ExceptionHandler
         }
     }
 
-    public function render($request, Throwable $e): JsonResponse
+    public function render($request, Throwable $e): Response
     {
         if ($e instanceof CodeException) {
             return response()->json(['code' => $e->getCode(), 'msg' => $e->getMessage()], $e->getHttpStatus());

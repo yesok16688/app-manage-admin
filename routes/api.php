@@ -47,6 +47,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('upload/icon', [FileController::class, 'uploadIcon']);
     Route::post('upload/img', [FileController::class, 'uploadAppImages']);
+    Route::get('image/{id}', [FileController::class, 'image']);
 
     // option api
     Route::get('/init', [OptionController::class, 'getOptions']);

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class AppVersion extends Base
@@ -14,7 +16,7 @@ class AppVersion extends Base
         'app_name',
         'api_key',
         'version',
-        'icon',
+        'icon_id',
         'description',
         'download_link',
         'status',
@@ -56,13 +58,29 @@ class AppVersion extends Base
         return $value ? explode(',', $value) : $value;
     }
 
+    public function setDeviceBlacklistAttribute($value)
+    {
+        $this->attributes['device_blacklist'] = is_array($value) ? join(',', $value) : $value;
+    }
+
+    public function getDeviceBlackAttribute($value)
+    {
+        return $value ? explode(',', $value) : $value;
+    }
+
+
     public function app()
     {
         return $this->belongsTo(App::class);
     }
 
-    public function imgs()
+    public function icon(): HasOne
     {
-        return $this->hasMany(AppFile::class, 'version_id', 'id');
+        return $this->hasOne(File::class, 'id', 'icon_id');
+    }
+
+    public function imgs(): BelongsToMany
+    {
+        return $this->belongsToMany(File::class, 'app_files', 'version_id', 'file_id' );
     }
 }
