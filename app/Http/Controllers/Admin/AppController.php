@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enum\AppStatus;
+use App\Exceptions\CodeException;
+use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
 use App\Models\App;
+use App\Models\AppVersion;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class AppController extends Controller
 {
@@ -22,7 +23,7 @@ class AppController extends Controller
                 $query->where('name', 'like', '%' . $name . '%');
             })
             ->when($request->get('region_code'), function(Builder $query, $regionCode) {
-                $query->where(DB::raw('FIND_IN_SET(' . $regionCode . ', region_codes)'));
+                $query->whereRaw('FIND_IN_SET(\'' . $regionCode . '\', region_codes)');
             })
             ->when($request->get('channel'), function(Builder $query, $value) {
                 $query->where('channel', $value);
@@ -35,15 +36,13 @@ class AppController extends Controller
      * Store a newly created resource in storage.
      * @throws \Throwable
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
             'name' => 'required',
             'region_codes' => 'required|array',
             'region_codes.*' => 'required|exists:regions,iso_code',
             'channel' => 'required|in:' . join(',', array_keys(config('common.channel'))),
-            'enable_redirect' => 'required|in:0,1',
-            'redirect_group_code' => 'required_if:enable_redirect,1|exclude_unless:enable_redirect,1|exists:redirect_urls,group_code',
             'remark' => '',
         ]);
         App::create($data);
@@ -53,7 +52,7 @@ class AppController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
         $info = App::query()->findOrFail($id);
         return $this->jsonResponse($info);
@@ -62,16 +61,13 @@ class AppController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
         $data = $request->validate([
             'name' => '',
-            'api_key' => '',
-            'region' => '|exists:regions,iso_code',
+            'region_codes' => 'array',
+            'region_codes.*' => 'required|exists:regions,iso_code',
             'channel' => 'in:' . join(',', array_keys(config('common.channel'))),
-            'submit_status' => 'in:' . join(',', AppStatus::values()),
-            'enable_redirect' => 'in:0,1',
-            'redirect_group_code' => 'required_if:enable_redirect,1|exclude_unless:enable_redirect,1|exists:redirect_urls,group_code',
             'remark' => '',
         ]);
         $info = App::query()->findOrFail($id);
@@ -81,9 +77,14 @@ class AppController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * @throws CodeException
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
+        $versionInfo = AppVersion::query()->where('app_id', $id)->first(['id']);
+        if($versionInfo) {
+            throw new CodeException('应用存在版本数据，不能删除', ErrorCode::INVALID_PARAMS);
+        }
         $info = App::query()->findOrFail($id);
         $info->delete();
         return $this->jsonResponse();

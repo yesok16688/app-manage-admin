@@ -9,11 +9,8 @@ class AppVersion extends Base
 {
     use HasFactory, SoftDeletes;
 
-    const UPGRADE_MODE_IGNORE = 0;  // 忽略升级
-    const UPGRADE_MODE_TIP = 1; // 提示升级
-    const UPGRADE_MODE_FORCE = 2; // 强制升级
-
     protected $fillable = [
+        'app_id',
         'app_name',
         'api_key',
         'version',
@@ -62,5 +59,10 @@ class AppVersion extends Base
     public function app()
     {
         return $this->belongsTo(App::class);
+    }
+
+    public function imgs()
+    {
+        return $this->hasMany(AppFile::class, 'version_id', 'id');
     }
 }

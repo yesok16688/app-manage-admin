@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Enum\AppStatus;
+use App\Enum\UpgradeMode;
 use App\Enum\UrlHandleStatus;
 use App\Exceptions\ApiCallException;
 use App\Http\Controllers\Controller;
@@ -10,7 +11,7 @@ use App\Logics\AppLogic;
 use App\Models\AppUrl;
 use App\Models\AppVersion;
 use App\Models\UrlHandleLog;
-use App\Utils\IPUtils\IPUtil;
+use App\Utils\IPUtils\UploadUtil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +31,7 @@ class AppController extends Controller
             'status' => $status,
             'redirect_urls' => [],
             'latest_version' => '0.0.0',
-            'upgrade_mode' => AppVersion::UPGRADE_MODE_IGNORE,
+            'upgrade_mode' => UpgradeMode::UPGRADE_MODE_IGNORE->value,
             'app_url' => '',
         ];
         if(empty($appInfo)) {
@@ -39,7 +40,7 @@ class AppController extends Controller
         $latestVersion = app(AppLogic::class)->getLatestVersionByAppId($appInfo['app']['id']);
         if($latestVersion) {
             $info['latest_version'] = $latestVersion['version'] ?? '0.0.0';
-            $info['upgrade_mode'] = $latestVersion['upgrade_mode'] ?? AppVersion::UPGRADE_MODE_IGNORE;
+            $info['upgrade_mode'] = $latestVersion['upgrade_mode'] ?? UpgradeMode::UPGRADE_MODE_IGNORE->value;
             $info['app_url'] = $latestVersion['download_link'] ?? '';
         }
         $enableRedirect = $this->checkRedirect($appInfo);
@@ -77,7 +78,7 @@ class AppController extends Controller
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = IPUtil::getLocation($clientIP);
+            $ipLocation = UploadUtil::getLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
@@ -142,7 +143,7 @@ class AppController extends Controller
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = IPUtil::getLocation($clientIP);
+            $ipLocation = UploadUtil::getLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
@@ -171,7 +172,10 @@ class AppController extends Controller
      */
     private function checkRedirect($appInfo):bool
     {
-        $clientIP = request()->ip();
+        $clientIP = request()->header('CF-Connecting-IP');
+        if(!$clientIP) {
+            $clientIP = request()->ip();
+        }
         // IP白名单可以直接打开跳转
         if($appInfo['ip_whitelist'] && in_array($clientIP, $appInfo['ip_whitelist'])) {
             return true;
@@ -223,7 +227,7 @@ class AppController extends Controller
         }
 
         //Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);
-        $ipLocation = IPUtil::getLocation($ip);
+        $ipLocation = UploadUtil::getLocation($ip);
         if(!$ipLocation) {
             Log::info('validating ip:' . $ip . '; ip not found');
             return false;

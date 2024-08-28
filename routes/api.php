@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\AppController;
+use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\RedirectUrlController;
 use App\Http\Controllers\Admin\RegionBlacklistController;
@@ -33,6 +35,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('app', AppController::class);
+    Route::apiResource('app-version', AppVersionController::class);
     Route::apiResource('redirect-url', RedirectUrlController::class);
     Route::apiResource('region-blacklist', RegionBlacklistController::class);
     Route::apiResource('region-whitelist', RegionWhitelistController::class);
@@ -41,6 +44,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('url-handle-log/{id}', [UrlHandleLogController::class, 'show']);
     Route::delete('url-handle-log', [UrlHandleLogController::class, 'destroy']);
     Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle']);
+
+    Route::post('upload/icon', [FileController::class, 'uploadIcon']);
+    Route::post('upload/img', [FileController::class, 'uploadAppImages']);
 
     // option api
     Route::get('/init', [OptionController::class, 'getOptions']);
