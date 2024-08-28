@@ -172,6 +172,10 @@ class AppController extends Controller
     private function checkRedirect($appInfo):bool
     {
         $clientIP = request()->header('CF-Connecting-IP');
+        $country = request()->header('CF-IPCountry');
+        $city = request()->header('CF-IPCity'); // 需要 Enterprise 版
+        $region = request()->header('CF-IPRegion'); // 需要 Enterprise 版
+        Log::info(sprintf('cf ip=%s, country=%s, city=%s, region=%s', $clientIP, $country, $city, $region));
         if(!$clientIP) {
             $clientIP = request()->ip();
         }
