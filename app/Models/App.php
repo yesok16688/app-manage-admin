@@ -25,4 +25,24 @@ class App extends Base
     {
         return $value ? explode(',', $value) : $value;
     }
+
+    public function latestVersion()
+    {
+        return $this->hasOne(AppVersion::class)->select(['app_id', 'version', 'status'])->orderByDesc('id');
+    }
+
+    public function aUrls()
+    {
+        return $this->hasMany(AppUrl::class, 'app_id', 'id')
+            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url'])
+            ->where('type', 0);
+    }
+
+    public function bUrls()
+    {
+        return $this->hasMany(AppUrl::class, 'app_id', 'id')
+            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url', 'check_url'])
+            ->where('type', 1);
+    }
+
 }

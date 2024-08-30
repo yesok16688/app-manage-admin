@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FileController;
 use App\Http\Controllers\Admin\OptionController;
-use App\Http\Controllers\Admin\RedirectUrlController;
+use App\Http\Controllers\Admin\AppUrlController;
 use App\Http\Controllers\Admin\RegionBlacklistController;
 use App\Http\Controllers\Admin\RegionWhitelistController;
 use App\Http\Controllers\Admin\UrlHandleLogController;
@@ -36,7 +36,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('app', AppController::class);
     Route::apiResource('app-version', AppVersionController::class);
-    Route::apiResource('redirect-url', RedirectUrlController::class);
+    Route::apiResource('app-url', AppUrlController::class);
     Route::apiResource('region-blacklist', RegionBlacklistController::class);
     Route::apiResource('region-whitelist', RegionWhitelistController::class);
 
@@ -46,8 +46,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle']);
 
     Route::post('upload/icon', [FileController::class, 'uploadIcon']);
-    Route::post('upload/img', [FileController::class, 'uploadAppImages']);
-    Route::get('image/{id}', [FileController::class, 'image']);
+    Route::post('upload/img', [FileController::class, 'uploadImage']);
+    //Route::get('image/{id}', [FileController::class, 'image']);
 
     // option api
     Route::get('/init', [OptionController::class, 'getOptions']);

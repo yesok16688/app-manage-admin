@@ -25,7 +25,6 @@ class FileController extends Controller
         );
     }
 
-
     /**
      * @throws \Exception
      */
@@ -37,20 +36,22 @@ class FileController extends Controller
             'file.max' => '图标大小不能大于500K',
             'file.dimensions' => '图标比例必须为1:1'
         ]);
-        $saveFile = UploadUtil::upload2Local($request->file('file'));
+        $saveFile = UploadUtil::upload2Local($request->file('file'), 'public');
         return $this->jsonDataResponse($saveFile);
     }
 
     /**
      * @throws \Exception
      */
-    public function uploadAppImages(Request $request): JsonResponse
+    public function uploadImage(Request $request): JsonResponse
     {
         $request->validate([
-            'files.*' => 'required|file|max:5120', // 限制每个文件最大为5MB
+            'file' => 'required|image|mimes:jpg,png|max:5120', // 限制每个文件最大为5MB
+        ], [
+            'file.max' => '截图大小不能大于500K',
         ]);
-        $saveFiles = UploadUtil::batchUpload2Local($request->file('files'));
-        return $this->jsonDataResponse($saveFiles);
+        $saveFile = UploadUtil::upload2Local($request->file('file'), 'public');
+        return $this->jsonDataResponse($saveFile);
     }
 
 }

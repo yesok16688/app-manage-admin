@@ -19,6 +19,7 @@ class AppController extends Controller
     public function index(Request $request): JsonResponse
     {
         $list = App::query()
+            ->with(['latestVersion', 'aUrls', 'bUrls'])
             ->when($request->get('name'), function(Builder $query, $name) {
                 $query->where('name', 'like', '%' . $name . '%');
             })
@@ -28,7 +29,39 @@ class AppController extends Controller
             ->when($request->get('channel'), function(Builder $query, $value) {
                 $query->where('channel', $value);
             })
-            ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'));
+            ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'))
+            ->toArray();
+
+        foreach ($list['data'] as &$item) {
+            $aLinkNormals = array_filter($item['a_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
+            });
+            $aLinkSpares = array_filter($item['a_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
+            });
+            $aLinkAbnormals = array_filter($item['a_urls'], function($item) {
+                return $item['is_enable'] == 0;
+            });
+            $bLinkNormals = array_filter($item['b_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
+            });
+            $bLinkSpares = array_filter($item['b_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
+            });
+            $bLinkAbnormals = array_filter($item['b_urls'], function($item) {
+                return $item['is_enable'] == 0;
+            });
+            $item['a_link_info'] = [
+                'normal' => count($aLinkNormals),
+                'spare' => count($aLinkSpares),
+                'abnormal' => count($aLinkAbnormals),
+            ];
+            $item['b_link_info'] = [
+                'normal' => count($bLinkNormals),
+                'spare' => count($bLinkSpares),
+                'abnormal' => count($bLinkAbnormals),
+            ];
+        }
         return $this->jsonDataResponse($list);
     }
 

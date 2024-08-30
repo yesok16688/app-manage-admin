@@ -26,7 +26,7 @@ return new class extends Migration
             $table->text('download_link')->nullable()->comment('下载链接');
             $table->tinyInteger('status')->default(0)->comment('提审状态（待提审/审核中/上架成功/投放中/被下架）[审核中强制关闭所有跳转行为]');
             // 控制信息
-            $table->string('device_blacklist', 255)->default('')->comment('设备黑名单,多个使用英文逗号分隔');
+            $table->text('device_blacklist')->nullable()->comment('设备黑名单,多个使用英文逗号分隔');
             $table->string('ip_blacklist', 255)->default('')->comment('IP黑名单,多个使用英文逗号分隔');
             $table->tinyInteger('is_region_limit')->default(1)->comment('限制除上架地区之外地区IP的跳转');
             $table->string('lang_blacklist', 255)->default('')->comment('手机语言黑名单,多个使用英文逗号分隔');

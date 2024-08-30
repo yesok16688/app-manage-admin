@@ -52,7 +52,7 @@ class AppVersionController extends Controller
             'app_name' => 'required',
             'api_key' => 'required',
             'version' => 'required|regex:/^\d{1,3}\.\d{1,3}\.\d{1,3}$/',
-            'icon_id' => 'exists:files,id',
+            'icon.id' => 'exists:files,id',
             'download_link' => 'url',
             'status' => 'required|in:' . join(',', AppStatus::values()),
             'is_region_limit' => 'required|in:0,1',
@@ -62,6 +62,8 @@ class AppVersionController extends Controller
             'ip_whitelist.*' => 'required|ipv4',
             'lang_blacklist' => 'array',
             'lang_blacklist.*' => 'required|exists:langs,lang_code',
+            'device_blacklist' => 'array',
+            'device_blacklist.*' => 'required',
             'disable_jump' => 'required|in:0,1',
             'upgrade_mode' => 'required|in:0,1,2',
             'app_img_ids' => 'array',
@@ -73,14 +75,16 @@ class AppVersionController extends Controller
         try {
             DB::beginTransaction();
 
-            $appVersion = new AppVersion($request->input());
+            $data = $request->input();
+            $data['icon_id'] = $data['icon']['id'] ?? '';
+            $appVersion = new AppVersion($data);
             $appVersion->save();
-            $appImages = array_map(function($imgId) use($appVersion) {
+            $appImages = array_map(function($row) use($appVersion) {
                 return new AppFile([
                     'version_id' => $appVersion->id,
-                    'file_id' => $imgId
+                    'file_id' => $row['id']
                 ]);
-            }, $request->input('app_img_ids'));
+            }, $request->input('imgs', []));
             $appImages && $appVersion->imgs()->saveMany($appImages);
             DB::commit();
         } catch (Exception $exception) {
@@ -108,7 +112,7 @@ class AppVersionController extends Controller
     {
         $data = $request->validate([
             'app_name' => '',
-            'icon_id' => 'exists:files,id',
+            'icon.id' => 'exists:files,id',
             'version' => '',
             'download_link' => 'url',
             'status' => 'in:' . join(',', AppStatus::values()),
@@ -119,10 +123,12 @@ class AppVersionController extends Controller
             'ip_whitelist.*' => 'ipv4',
             'lang_blacklist' => 'array',
             'lang_blacklist.*' => 'exists:langs,lang_code',
+            'device_blacklist' => 'array',
+            'device_blacklist.*' => 'required',
             'disable_jump' => 'in:0,1',
             'upgrade_mode' => 'in:0,1,2',
             'app_img_ids' => 'array',
-            'app_img_ids.*' => 'exists:files,id'
+            'app_img_ids.*' => 'exists:files,id',
         ]);
         $appVersion = AppVersion::query()->findOrFail($id);
         if(isset($data['version']) && ($appVersion['status'] != AppStatus::UN_SUBMIT->value) && ($appVersion['version'] !== $data['version'])) {
@@ -130,16 +136,16 @@ class AppVersionController extends Controller
         }
         try {
             DB::beginTransaction();
-
+            $data['icon_id'] = $data['icon']['id'] ?? '';
             $appVersion->update($data);
-            $appImages = array_map(function($imgId) use($appVersion) {
+            $appImages = array_map(function($row) use($appVersion) {
                 return new AppFile([
                     'version_id' => $appVersion->id,
-                    'file_id' => $imgId
+                    'file_id' => $row['id']
                 ]);
-            }, $request->input('app_img_ids'));
+            }, $request->input('imgs', []));
             $appVersion->imgs()->detach();
-            $appVersion->imgs()->saveMany($appImages);
+            $appImages && $appVersion->imgs()->saveMany($appImages);
 
             DB::commit();
         } catch (Exception $exception) {

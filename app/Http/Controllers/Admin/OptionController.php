@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enum\AppStatus;
+use App\Enum\UpgradeMode;
 use App\Enum\UrlHandleStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AppUrl;
@@ -23,6 +24,7 @@ class OptionController extends Controller
             'app' => [
                 'submitStatus' => AppStatus::desc(),
                 'handleStatus' => UrlHandleStatus::desc(),
+                'upgradeMode' => UpgradeMode::desc(),
             ]
         ];
         return $this->jsonDataResponse($options);

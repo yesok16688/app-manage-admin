@@ -23,9 +23,10 @@ class AppVersion extends Base
         'ip_blacklist',
         'is_region_limit',
         'lang_blacklist',
+        'device_blacklist',
         'disable_jump',
         'ip_whitelist',
-        'upgrade_mode'
+        'upgrade_mode',
     ];
 
     public function setIpBlacklistAttribute($value)
@@ -33,10 +34,10 @@ class AppVersion extends Base
         $this->attributes['ip_blacklist'] = is_array($value) ? join(',', $value) : $value;
     }
 
-    public function getIpBlacklistAttribute($value)
-    {
-        return $value ? explode(',', $value) : $value;
-    }
+//    public function getIpBlacklistAttribute($value)
+//    {
+//        return $value ? explode(',', $value) : $value;
+//    }
 
     public function setLangBlacklistAttribute($value)
     {
@@ -53,20 +54,20 @@ class AppVersion extends Base
         $this->attributes['ip_whitelist'] = is_array($value) ? join(',', $value) : $value;
     }
 
-    public function getIpWhitelistAttribute($value)
-    {
-        return $value ? explode(',', $value) : $value;
-    }
+//    public function getIpWhitelistAttribute($value)
+//    {
+//        return $value ? explode(',', $value) : $value;
+//    }
 
     public function setDeviceBlacklistAttribute($value)
     {
         $this->attributes['device_blacklist'] = is_array($value) ? join(',', $value) : $value;
     }
 
-    public function getDeviceBlackAttribute($value)
-    {
-        return $value ? explode(',', $value) : $value;
-    }
+//    public function getDeviceBlackAttribute($value)
+//    {
+//        return $value ? explode(',', $value) : $value;
+//    }
 
 
     public function app()

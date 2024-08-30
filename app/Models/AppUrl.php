@@ -22,4 +22,9 @@ class AppUrl extends Base
         'is_reserved',
         'remark'
     ];
+
+    public function app()
+    {
+        return $this->belongsTo(App::class);
+    }
 }
