@@ -40,8 +40,8 @@ class AppUrlController extends Controller
         $data = $request->validate([
             'app_id' => 'required|exists:apps,id',
             'type' => 'required|in:0,1',
-            'url' => 'required|url:http,https',
-            'check_url' => 'required_if:type,1|url:http,https',
+            'url' => 'required',
+            'check_url' => 'required_if:type,1',
             'is_enable' => 'required|in:0,1',
             'is_reserved' => 'required|in:0,1',
             'remark' => '',
@@ -65,8 +65,8 @@ class AppUrlController extends Controller
     public function update(Request $request, string $id)
     {
         $data = $request->validate([
-            'url' => 'url:http,https',
-            'check_url' => 'required_if:type,1|url:http,https',
+            'url' => 'required',
+            'check_url' => 'required_if:type,1',
             'is_enable' => 'in:0,1',
             'is_reserved' => 'in:0,1',
             'remark' => '',

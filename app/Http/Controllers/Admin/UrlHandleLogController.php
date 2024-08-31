@@ -17,7 +17,7 @@ class UrlHandleLogController extends Controller
     public function index(Request $request)
     {
         $list = UrlHandleLog::query()
-            ->with(['url'])
+            ->with(['url', 'url.app'])
             ->when($request->get('url'), function(Builder $query, $value) {
                 $query->whereHas('url', function(Builder $query1) use($value) {
                     $query1->where('url', 'like', "%$value%");

@@ -42,7 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('url-handle-log', [UrlHandleLogController::class, 'index']);
     Route::get('url-handle-log/{id}', [UrlHandleLogController::class, 'show']);
-    Route::delete('url-handle-log', [UrlHandleLogController::class, 'destroy']);
+    Route::delete('url-handle-log/{id}', [UrlHandleLogController::class, 'destroy']);
     Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle']);
 
     Route::post('upload/icon', [FileController::class, 'uploadIcon']);
