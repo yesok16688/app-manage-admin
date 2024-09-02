@@ -35,7 +35,6 @@ return new class extends Migration
             // 额外信息
             $table->tinyInteger('upgrade_mode')->default(0)->comment('升级模式：0=不升级；1=提示升级；2=强制升级');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

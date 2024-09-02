@@ -43,7 +43,7 @@ class AppUrlController extends Controller
             'url' => 'required',
             'check_url' => 'required_if:type,1',
             'is_enable' => 'required|in:0,1',
-            'is_reserved' => 'required|in:0,1',
+            'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);
         AppUrl::create($data);
@@ -68,7 +68,7 @@ class AppUrlController extends Controller
             'url' => 'required',
             'check_url' => 'required_if:type,1',
             'is_enable' => 'in:0,1',
-            'is_reserved' => 'in:0,1',
+            'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);
         $info = AppUrl::query()->findOrFail($id);
