@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 class AppController extends Controller
 {
     private $appInfo;
+    private $redirectCheckMsg;
 
     /**
      * @throws ApiCallException
@@ -176,24 +177,29 @@ class AppController extends Controller
             $clientIP = request()->ip();
         }
         // IP白名单可以直接打开跳转
-        if($appInfo['ip_whitelist'] && in_array($clientIP, $appInfo['ip_whitelist'])) {
+        if($appInfo['ip_whitelist'] && in_array($clientIP, explode(',', $appInfo['ip_whitelist']))) {
+            $this->redirectCheckMsg = '[true]ip whitelist';
             return true;
         }
         // 强制不跳转
         if($appInfo['disable_jump']) {
+            $this->redirectCheckMsg = '[false]disable_jump';
             return false;
         }
         // 审核中强制不跳转
         if($appInfo['status'] == AppStatus::CHECKING) {
+            $this->redirectCheckMsg = '[false]app checking';
             return false;
         }
         // 手机语言黑名单
         $langCode = request()->input('lang_code');
         if(!$langCode || ($appInfo['lang_blacklist'] && in_array($langCode, $appInfo['lang_blacklist']))) {
+            $this->redirectCheckMsg = '[false]client lang=' . $langCode . ' or in lang_blacklist';
             return false;
         }
         $deviceId = request()->input('device_id');
-        if(!$deviceId || ($appInfo['device_blacklist'] && in_array($deviceId, $appInfo['device_blacklist']))) {
+        if(!$deviceId || ($appInfo['device_blacklist'] && in_array($deviceId, explode(',', $appInfo['device_blacklist'])))) {
+            $this->redirectCheckMsg = '[false]client device=' . $langCode . ' or in device_blacklist';
             return false;
         }
 
@@ -221,12 +227,14 @@ class AppController extends Controller
         //$ip = '175.141.26.50';
 
         // 检查IP黑名单
-        if ($this->appInfo['ip_blacklist'] && in_array($ip, $this->appInfo['ip_blacklist'])) {
+        if ($this->appInfo['ip_blacklist'] && in_array($ip, explode(',', $this->appInfo['ip_blacklist']))) {
+            $this->redirectCheckMsg = '[false]ip_blacklist';
             return false;
         }
 
         // 检查是否需要判断IP仅限上架地区访问
         if(!$this->appInfo['is_region_limit']) {
+            $this->redirectCheckMsg = '[true]region no limit';
             return true;
         }
 
@@ -236,14 +244,20 @@ class AppController extends Controller
             $ipLocation = IPUtil::getLocation($ip);
         }
         if(!$ipLocation) {
-            Log::info('validating ip:' . $ip . '; ip not found');
+            //Log::info('validating ip:' . $ip . '; ip not found');
+            $this->redirectCheckMsg = '[false]ip=' . $ip . '; region not found';
             return false;
         }
-        Log::info('validating ip:' . $ip . '; location=' . $ipLocation->getCountryCode() . ':' . $ipLocation->getRegionCode() . '(' . $ipLocation->getRegionName() . ')');
+        //Log::info('validating ip:' . $ip . '; location=' . $ipLocation->getCountryCode() . ':' . $ipLocation->getRegionCode() . '(' . $ipLocation->getRegionName() . ')');
 
         // 校验IP是否在上架地区列表中
         $regionCodes = $this->appInfo['app']['region_codes'];
-        return $regionCodes && in_array($ipLocation->getCountryCode(), $regionCodes);
+        if($regionCodes && in_array($ipLocation->getCountryCode(), $regionCodes)) {
+            $this->redirectCheckMsg = '[true]region limit';
+            return true;
+        }
+        $this->redirectCheckMsg = '[false]region limit';
+        return false;
 //        $blacklist = RegionBlacklist::query()
 //            ->where('region_code', $this->appInfo->region)
 //            ->where('is_enable', 1)
