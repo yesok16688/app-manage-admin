@@ -25,29 +25,29 @@ class IPLocateInfo
         return $this->regionCode;
     }
 
-    public function setRegionCode(string $regionCode): void
+    public function setRegionCode(?string $regionCode): void
     {
-        $this->regionCode = $regionCode;
+        $this->regionCode = $regionCode ?? '';
     }
 
     public function getRegionName(): string
     {
-        return $this->regionName;
+        return $this->regionName ?? '';
     }
 
-    public function setRegionName(string $regionName): void
+    public function setRegionName(?string $regionName): void
     {
-        $this->regionName = $regionName;
+        $this->regionName = $regionName ?? '';
     }
 
     public function getCity(): string
     {
-        return $this->city;
+        return $this->city ?? '';
     }
 
-    public function setCity(string $city): void
+    public function setCity(?string $city): void
     {
-        $this->city = $city;
+        $this->city = $city ?? '';
     }
 
     public function getIp(): string
