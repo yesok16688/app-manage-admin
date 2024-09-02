@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AppEvent extends Base
+class AppEventLog extends Base
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
+    /**
+     * @var \App\Events\AppReported|mixed
+     */
     protected $fillable = [
         'app_version_id',
         'event_code',
@@ -22,4 +25,10 @@ class AppEvent extends Base
         'domain',
         'remark',
     ];
+
+    public function version()
+    {
+        return $this->belongsTo(AppVersion::class, 'app_version_id', 'id')
+            ->select(['id', 'app_id', 'app_name']);
+    }
 }

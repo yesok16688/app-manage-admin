@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Events\AppReported;
+use App\Events\BadUrlReported;
 use App\Listeners\LogAppEvent;
+use App\Listeners\LogBadUrl;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -21,6 +23,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         AppReported::class => [
             LogAppEvent::class,
+        ],
+        BadUrlReported::class => [
+            LogBadUrl::class,
         ]
     ];
 

@@ -6,7 +6,6 @@ use App\Enum\EventCode;
 use App\Enum\SubEventCode;
 use App\Events\AppReported;
 use App\Http\Controllers\Controller;
-use App\Models\AppEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,7 +22,13 @@ class EventController extends Controller
             'device_id' => '',
             'lang_code' => ''
         ]);
-        AppReported::dispatch();
-        return $this->jsonDataResponse($appInfo);
+        $clientIP = request()->header('CF-Connecting-IP');
+        if(!$clientIP) {
+            $clientIP = request()->ip();
+        }
+        AppReported::dispatch($appInfo['id'], $data['event_code'], $data['sub_event_code'] ?? '', $clientIP,
+            request()->input('device_id', ''), request()->input('lang_code', ''),
+            request()->getHost());
+        return $this->jsonDataResponse();
     }
 }

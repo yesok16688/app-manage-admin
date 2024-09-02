@@ -17,21 +17,16 @@ class UrlHandleLogController extends Controller
     public function index(Request $request)
     {
         $list = UrlHandleLog::query()
-            ->with(['url', 'url.app'])
+            ->with(['url', 'url.app', 'details'])
             ->when($request->get('url'), function(Builder $query, $value) {
                 $query->whereHas('url', function(Builder $query1) use($value) {
                     $query1->where('url', 'like', "%$value%");
                 });
             })
-            ->when($request->get('http_status'), function(Builder $query, $value) {
-                $query->where('http_status', $value);
-            })
-            ->when($request->get('client_ip'), function(Builder $query, $value) {
-                $query->where('client_ip', 'like', "%$value%");
-            })
             ->when(!is_null($request->get('status')), function(Builder $query) {
                 $query->where('status', request()->get('status'));
             })
+            ->orderByDesc('id')
             ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'));
         return $this->jsonDataResponse($list);
     }

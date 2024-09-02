@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AppController;
+use App\Http\Controllers\Admin\AppEventController;
 use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\FileController;
@@ -36,6 +37,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::apiResource('app', AppController::class);
     Route::apiResource('app-version', AppVersionController::class);
+    Route::apiResource('app-event-log', AppEventController::class);
     Route::apiResource('app-url', AppUrlController::class);
     Route::apiResource('region-blacklist', RegionBlacklistController::class);
     Route::apiResource('region-whitelist', RegionWhitelistController::class);

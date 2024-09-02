@@ -3,17 +3,22 @@
 namespace App\Http\Controllers\App;
 
 use App\Enum\AppStatus;
+use App\Enum\EventCode;
 use App\Enum\UpgradeMode;
 use App\Enum\UrlHandleStatus;
+use App\Events\AppReported;
+use App\Events\BadUrlReported;
 use App\Exceptions\ApiCallException;
 use App\Http\Controllers\Controller;
 use App\Logics\AppLogic;
 use App\Models\AppUrl;
 use App\Models\UrlHandleLog;
+use App\Utils\IPUtils\IPLocateInfo;
 use App\Utils\IPUtils\IPUtil;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use PHPUnit\Event\Event;
 
 class AppController extends Controller
 {
@@ -45,6 +50,10 @@ class AppController extends Controller
         }
         $enableRedirect = $this->checkRedirect($appInfo);
         $redirectUrls = [];
+        $clientIP = $this->getClientIp();
+        AppReported::dispatch($appInfo['id'], EventCode::OA->value, '', $clientIP,
+            request()->input('device_id', ''), request()->input('lang_code', ''),
+            request()->getHost(), $this->redirectCheckMsg, $this->getIPLocation($clientIP));
         if($enableRedirect) {
             $status = 99;   // 与客户端约定的开启跳转的状态码
             $redirectUrls = AppUrl::query()
@@ -63,10 +72,10 @@ class AppController extends Controller
      * 刷新A链接
      * @param Request $request
      * @return JsonResponse
-     * @throws ApiCallException
      */
     public function refresh(Request $request): JsonResponse
     {
+        $appInfo = $request->input('app_info');
         $data = $request->validate([
             'invalid_list' => 'array',
             'invalid_list.*.id' => 'integer|exists:redirect_urls,id',
@@ -78,25 +87,12 @@ class AppController extends Controller
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = IPUtil::getLocation($clientIP);
+            $ipLocation = $this->getIPLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
         $invalidList = $data['invalid_list'];
-        $logs = [];
-        foreach($invalidList as $invalidItem) {
-            $logs[] = [
-                'url_id' => $invalidItem['id'],
-                'http_status' => $invalidItem['http_status'] ?? 0,
-                'status' => UrlHandleStatus::CREATED->value,
-                'client_ip' => $clientIP,
-                'client_ip_region' => $ipLocation ? $ipLocation->getCountryCode() : '',
-                'client_ip_sub_region' => $ipLocation ? $ipLocation->getRegionCode() : '',
-            ];
-        }
-        if($logs) {
-            UrlHandleLog::insert($logs);
-        }
+        BadUrlReported::dispatch($appInfo['id'], $invalidList, $ipLocation);
 
         $appInfo = $request->input('app_info');
         $apiUrls = AppUrl::query()
@@ -139,32 +135,27 @@ class AppController extends Controller
         ], [
             'invalid_list.*.id' => 'url is not exists',
         ]);
+        $appInfo = $request->input('app_info');
 
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = IPUtil::getLocation($clientIP);
+            $ipLocation = $this->getIPLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
         $invalidList = $data['invalid_list'];
-        $logs = [];
-        foreach($invalidList as $invalidItem) {
-            $logs[] = [
-                'url_id' => $invalidItem['id'],
-                'http_status' => $invalidItem['http_status'] ?? 0,
-                'status' => UrlHandleStatus::CREATED->value,
-                'client_ip' => $clientIP,
-                'client_ip_region' => $ipLocation ? $ipLocation->getCountryCode() : '',
-                'client_ip_sub_region' => $ipLocation ? $ipLocation->getRegionCode() : '',
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s'),
-            ];
-        }
-        if($logs) {
-            UrlHandleLog::insert($logs);
-        }
+        BadUrlReported::dispatch($appInfo['id'], $invalidList, $ipLocation);
         return $this->jsonResponse();
+    }
+
+    private function getClientIp(): string
+    {
+        $clientIP = request()->header('CF-Connecting-IP');
+        if(!$clientIP) {
+            $clientIP = request()->ip();
+        }
+        return $clientIP;
     }
 
     /**
@@ -172,10 +163,8 @@ class AppController extends Controller
      */
     private function checkRedirect($appInfo):bool
     {
-        $clientIP = request()->header('CF-Connecting-IP');
-        if(!$clientIP) {
-            $clientIP = request()->ip();
-        }
+
+        $clientIP = $this->getClientIp();
         // IP白名单可以直接打开跳转
         if($appInfo['ip_whitelist'] && in_array($clientIP, explode(',', $appInfo['ip_whitelist']))) {
             $this->redirectCheckMsg = '[true]ip whitelist';
@@ -213,6 +202,18 @@ class AppController extends Controller
     /**
      * @throws ApiCallException
      */
+    private function getIPLocation($ip): ?IPLocateInfo
+    {
+        $ipLocation = IPUtil::getCFLocation(request());
+        if(!$ipLocation) {
+            $ipLocation = IPUtil::getLocation($ip);
+        }
+        return $ipLocation;
+    }
+
+    /**
+     * @throws ApiCallException
+     */
     private function validateIPLocation(string $ip): bool
     {
 
@@ -239,10 +240,7 @@ class AppController extends Controller
         }
 
         //Log::info('validating ip:' . $ip . '; app mange region:' . $this->appInfo->region);
-        $ipLocation = IPUtil::getCFLocation(request());
-        if(!$ipLocation) {
-            $ipLocation = IPUtil::getLocation($ip);
-        }
+        $ipLocation = $this->getIPLocation($ip);
         if(!$ipLocation) {
             //Log::info('validating ip:' . $ip . '; ip not found');
             $this->redirectCheckMsg = '[false]ip=' . $ip . '; region not found';

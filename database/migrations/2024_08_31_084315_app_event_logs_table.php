@@ -19,14 +19,17 @@ return new class extends Migration
             $table->bigInteger('app_version_id')->default(0)->comment('应用版本ID');
             $table->string('event_code', 30)->default('')->comment('事件代号');
             $table->string('sub_event_code', 30)->default('')->comment('事件子代号');
-            $table->string('client_ip', 56)->default('')->comment('请求端IP');
-            $table->string('client_ip_region_code', 3)->default('')->comment('请求端所在地区');
+            $table->string('client_ip', 56)->default('')->comment('请求端IP')->index('idx_ip');
+            $table->string('client_ip_region_code', 3)->default('')->comment('请求端所在地区')->index('idx_region');
             $table->string('client_ip_sub_region_code', 3)->default('')->comment('请求端所在子地区');
-            $table->string('device_id', 255)->default('')->comment('app设备唯一码');
+            $table->string('device_id', 255)->default('')->comment('app设备唯一码')->index('idx_device');
             $table->string('lang_code', 50)->default('')->comment('语言代码');
-            $table->string('domain', 255)->default('')->comment('请求端访问的域名');
+            $table->string('domain', 255)->default('')->comment('请求端访问的域名')->index('idx_domain');
             $table->string('remark',  255)->default('')->comment('备注说明');
             $table->timestamps();
+            $table->index(['event_code', 'sub_event_code'], 'idx_event');
+            $table->index(['created_at'], 'idx_created');
+            $table->index(['app_version_id', 'lang_code'], 'idx_version');
         });
     }
 

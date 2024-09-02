@@ -2,11 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exceptions\CodeException;
-use App\Exceptions\ErrorCode;
 use App\Http\Controllers\Controller;
-use App\Models\App;
-use App\Models\AppVersion;
+use App\Models\AppEventLog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,108 +15,39 @@ class AppEventController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $list = App::query()
-            ->with(['latestVersion', 'aUrls', 'bUrls'])
-            ->when($request->get('name'), function(Builder $query, $name) {
-                $query->where('name', 'like', '%' . $name . '%');
+        $list = AppEventLog::query()
+            ->with(['version.app'])
+            ->when($request->get('event_code'), function(Builder $query, $value) {
+                $query->where('event_code', $value);
             })
-            ->when($request->get('region_code'), function(Builder $query, $regionCode) {
-                $query->whereRaw('FIND_IN_SET(\'' . $regionCode . '\', region_codes)');
+            ->when($request->get('sub_event_code'), function(Builder $query, $value) {
+                $query->where('sub_event_code', $value);
             })
-            ->when($request->get('channel'), function(Builder $query, $value) {
-                $query->where('channel', $value);
+            ->when($request->get('client_ip'), function(Builder $query, $value) {
+                $query->where('client_ip', $value);
             })
+            ->when($request->get('device_id'), function(Builder $query, $value) {
+                $query->where('device_id', $value);
+            })
+            ->when($request->get('lang_code'), function(Builder $query, $value) {
+                $query->where('lang_code', $value);
+            })
+            ->when($request->get('domain'), function(Builder $query, $value) {
+                $query->where('domain', $value);
+            })
+            ->when($request->get('client_ip_region_code'), function(Builder $query, $value) {
+                $query->where('client_ip_region_code', $value);
+            })
+            ->when($request->get('created_at'), function(Builder $query, $value) {
+                $query->where('created_at', '>=',  $value[0])
+                    ->where('created_at', '<=', $value[1]);
+            })
+            ->when($request->get('remark'), function(Builder $query, $value) {
+                $query->where('remark', 'like', "%$value%");
+            })
+            ->orderByDesc('id')
             ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'))
             ->toArray();
-
-        foreach ($list['data'] as &$item) {
-            $aLinkNormals = array_filter($item['a_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
-            });
-            $aLinkSpares = array_filter($item['a_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
-            });
-            $aLinkAbnormals = array_filter($item['a_urls'], function($item) {
-                return $item['is_enable'] == 0;
-            });
-            $bLinkNormals = array_filter($item['b_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
-            });
-            $bLinkSpares = array_filter($item['b_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
-            });
-            $bLinkAbnormals = array_filter($item['b_urls'], function($item) {
-                return $item['is_enable'] == 0;
-            });
-            $item['a_link_info'] = [
-                'normal' => count($aLinkNormals),
-                'spare' => count($aLinkSpares),
-                'abnormal' => count($aLinkAbnormals),
-            ];
-            $item['b_link_info'] = [
-                'normal' => count($bLinkNormals),
-                'spare' => count($bLinkSpares),
-                'abnormal' => count($bLinkAbnormals),
-            ];
-        }
         return $this->jsonDataResponse($list);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     * @throws \Throwable
-     */
-    public function store(Request $request): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => 'required',
-            'region_codes' => 'required|array',
-            'region_codes.*' => 'required|exists:regions,iso_code',
-            'channel' => 'required|in:' . join(',', array_keys(config('common.channel'))),
-            'remark' => '',
-        ]);
-        App::create($data);
-        return $this->jsonResponse();
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id): JsonResponse
-    {
-        $info = App::query()->findOrFail($id);
-        return $this->jsonResponse($info);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id): JsonResponse
-    {
-        $data = $request->validate([
-            'name' => '',
-            'region_codes' => 'array',
-            'region_codes.*' => 'required|exists:regions,iso_code',
-            'channel' => 'in:' . join(',', array_keys(config('common.channel'))),
-            'remark' => '',
-        ]);
-        $info = App::query()->findOrFail($id);
-        $info->update($data);
-        return $this->jsonResponse();
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @throws CodeException
-     */
-    public function destroy(string $id): JsonResponse
-    {
-        $versionInfo = AppVersion::query()->where('app_id', $id)->first(['id']);
-        if($versionInfo) {
-            throw new CodeException('应用存在版本数据，不能删除', ErrorCode::INVALID_PARAMS);
-        }
-        $info = App::query()->findOrFail($id);
-        $info->delete();
-        return $this->jsonResponse();
     }
 }

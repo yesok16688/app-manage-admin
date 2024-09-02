@@ -14,18 +14,20 @@ class AppReported
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $appVersionId;
-    private $eventCode;
-    private $subEventCode;
-    private $clientIp;
-    private $deviceId;
-    private $langCode;
-    private $domain;
+    public $appVersionId;
+    public $eventCode;
+    public $subEventCode;
+    public $clientIp;
+    public $deviceId;
+    public $langCode;
+    public $domain;
+    public $msg;
+    public $IPLocation;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($appVersionId, $eventCode, $subEventCode, $clientIp, $deviceId, $langCode, $domain)
+    public function __construct($appVersionId, $eventCode, $subEventCode, $clientIp, $deviceId, $langCode, $domain, $msg = '', $IPLocation = null)
     {
         $this->appVersionId = $appVersionId;
         $this->eventCode = $eventCode;
@@ -34,6 +36,8 @@ class AppReported
         $this->deviceId = $deviceId;
         $this->langCode = $langCode;
         $this->domain = $domain;
+        $this->msg = $msg;
+        $this->IPLocation = $IPLocation;
     }
 
     /**

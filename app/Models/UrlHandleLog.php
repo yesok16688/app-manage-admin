@@ -10,16 +10,26 @@ class UrlHandleLog extends Base
 
     protected $fillable = [
         'url_id',
-        'http_status',
         'status',
-        'client_ip',
-        'client_ip_region',
-        'client_ip_sub_region',
         'remark'
+    ];
+
+    protected $appends = [
+        'distinct_ip_count',
     ];
 
     public function url()
     {
         return $this->hasOne(AppUrl::class, 'id', 'url_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(UrlHandleLogDetail::class);
+    }
+
+    public function getDistinctIpCountAttribute()
+    {
+        return $this->details()->count();
     }
 }
