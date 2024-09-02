@@ -77,7 +77,7 @@ class AppController extends Controller
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = UploadUtil::getLocation($clientIP);
+            $ipLocation = IPUtil::getLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
@@ -142,7 +142,7 @@ class AppController extends Controller
         // 保存上报记录
         $clientIP = $request->getClientIp();
         try {
-            $ipLocation = UploadUtil::getLocation($clientIP);
+            $ipLocation = IPUtil::getLocation($clientIP);
         } catch (ApiCallException $exception) {
             $ipLocation = null;
         }
