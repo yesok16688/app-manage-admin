@@ -18,7 +18,7 @@ enum AppStatus: int
         return [
             AppStatus::UN_SUBMIT->value => '待提审',
             AppStatus::CHECKING->value => '审核中',
-            AppStatus::PASSED->value => '上架成功',
+            AppStatus::PASSED->value => '已审核',
             AppStatus::REJECTED->value => '被驳回',
             AppStatus::PUBLISH->value => '投放中',
             AppStatus::UNPUBLISH->value => '被下架',
