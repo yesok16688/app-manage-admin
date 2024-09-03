@@ -29,7 +29,7 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('app', function (Request $request) {
-            return Limit::perMinute(60)->by($request->ip());
+            return Limit::perMinute(20)->by($request->ip());
         });
 
         $this->routes(function () {
