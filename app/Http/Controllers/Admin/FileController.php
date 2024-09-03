@@ -31,9 +31,9 @@ class FileController extends Controller
     public function uploadIcon(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|image|mimes:jpg,png|max:500|dimensions:ratio=1', // 限制每个文件最大为500KB
+            'file' => 'required|image|mimes:jpg,png|max:1024|dimensions:ratio=1', // 限制每个文件最大为1MB
         ], [
-            'file.max' => '图标大小不能大于500K',
+            'file.max' => '图标大小不能大于1M',
             'file.dimensions' => '图标比例必须为1:1'
         ]);
         $saveFile = UploadUtil::upload2Local($request->file('file'), 'public');
