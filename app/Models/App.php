@@ -34,14 +34,14 @@ class App extends Base
     public function aUrls()
     {
         return $this->hasMany(AppUrl::class, 'app_id', 'id')
-            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url'])
+            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url', 'is_in_used'])
             ->where('type', 0);
     }
 
     public function bUrls()
     {
         return $this->hasMany(AppUrl::class, 'app_id', 'id')
-            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url', 'check_url'])
+            ->select(['id', 'app_id', 'is_enable', 'is_reserved', 'url', 'check_url', 'is_in_used'])
             ->where('type', 1);
     }
 

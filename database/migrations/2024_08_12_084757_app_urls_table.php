@@ -20,8 +20,9 @@ return new class extends Migration
             $table->unsignedInteger('type')->default(0)->comment('链接类型：0=A链接；1=B链接');
             $table->text('url')->nullable()->comment('跳转链接');
             $table->text('check_url')->nullable()->comment('测试链接');
-            $table->unsignedTinyInteger('is_enable')->default(1)->comment('是否启用：0=否；1=是');
+            $table->unsignedTinyInteger('is_enable')->default(1)->comment('是否正常：0=否；1=是');
             $table->unsignedTinyInteger('is_reserved')->default(0)->comment('是否备用：0=否；1=是');
+            $table->unsignedTinyInteger('is_in_used')->default(0)->comment('是否启用：0=否；1=是');
             $table->string('remark', 256)->default('')->comment('备注');
             $table->timestamps();
             $table->softDeletes();

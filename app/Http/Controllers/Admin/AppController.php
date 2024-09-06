@@ -34,19 +34,25 @@ class AppController extends Controller
 
         foreach ($list['data'] as &$item) {
             $aLinkNormals = array_filter($item['a_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 0 && $item['is_in_used'] == 1;
+            });
+            $aLinkNotInUsed = array_filter($item['a_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_in_used'] == 0;
             });
             $aLinkSpares = array_filter($item['a_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 1 && $item['is_in_used'] == 1;
             });
             $aLinkAbnormals = array_filter($item['a_urls'], function($item) {
                 return $item['is_enable'] == 0;
             });
             $bLinkNormals = array_filter($item['b_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 0;
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 0 && $item['is_in_used'] == 1;
+            });
+            $bLinkNotInUsed = array_filter($item['b_urls'], function($item) {
+                return $item['is_enable'] == 1 && $item['is_in_used'] == 0;
             });
             $bLinkSpares = array_filter($item['b_urls'], function($item) {
-                return $item['is_enable'] == 1 && $item['is_reserved'] == 1;
+                return $item['is_enable'] == 1 && $item['is_reserved'] == 1 && $item['is_in_used'] == 1;
             });
             $bLinkAbnormals = array_filter($item['b_urls'], function($item) {
                 return $item['is_enable'] == 0;
@@ -55,11 +61,13 @@ class AppController extends Controller
                 'normal' => count($aLinkNormals),
                 'spare' => count($aLinkSpares),
                 'abnormal' => count($aLinkAbnormals),
+                'not_used' => count($aLinkNotInUsed)
             ];
             $item['b_link_info'] = [
                 'normal' => count($bLinkNormals),
                 'spare' => count($bLinkSpares),
                 'abnormal' => count($bLinkAbnormals),
+                'not_used' => count($bLinkNotInUsed)
             ];
         }
         return $this->jsonDataResponse($list);

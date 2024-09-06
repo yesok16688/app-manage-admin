@@ -27,6 +27,9 @@ class AppUrlController extends Controller
             ->when(!is_null($request->get('is_reserved')), function(Builder $query) {
                 $query->where('is_reserved', request()->get('is_reserved'));
             })
+            ->when(!is_null($request->get('is_in_used')), function(Builder $query) {
+                $query->where('is_in_used', request()->get('is_in_used'));
+            })
             ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'));
         return $this->jsonDataResponse($list);
     }
@@ -43,6 +46,7 @@ class AppUrlController extends Controller
             'url' => 'required',
             'check_url' => 'required_if:type,1',
             'is_enable' => 'required|in:0,1',
+            'is_in_used' => 'required|in:0,1',
             'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);
@@ -68,6 +72,7 @@ class AppUrlController extends Controller
             'url' => 'required',
             'check_url' => 'required_if:type,1',
             'is_enable' => 'in:0,1',
+            'is_in_used' => 'in:0,1',
             'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);

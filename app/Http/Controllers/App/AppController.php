@@ -176,7 +176,7 @@ class AppController extends Controller
             return false;
         }
         // 审核中强制不跳转
-        if($appInfo['status'] == AppStatus::CHECKING) {
+        if($appInfo['status'] == AppStatus::CHECKING->value) {
             $this->redirectCheckMsg = '[false]app checking';
             return false;
         }

@@ -19,6 +19,7 @@ class AppUrl extends Base
         'url',
         'check_url',
         'is_enable',
+        'is_in_used',
         'is_reserved',
         'remark'
     ];
