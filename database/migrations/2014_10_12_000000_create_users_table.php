@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('email', 50)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('two_face_secret_key', 20)->comment('google验证码secret_key');
             $table->rememberToken();
             $table->timestamps();
         });

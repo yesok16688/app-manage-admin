@@ -35,17 +35,33 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/refresh-token', [AuthController::class, 'refreshToken']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::apiResource('app', AppController::class);
-    Route::apiResource('app-version', AppVersionController::class);
+    Route::get('app', [AppController::class, 'index']);
+    Route::get('app/{id}', [AppController::class, 'show']);
+    Route::post('app', [AppController::class, 'store'])->middleware(['auth.2fa']);
+    Route::put('app/{id}', [AppController::class, 'update'])->middleware(['auth.2fa']);
+    Route::delete('app/{id}', [AppController::class, 'destroy'])->middleware(['auth.2fa']);
+
+    Route::get('app-version', [AppVersionController::class, 'index']);
+    Route::get('app-version/{id}', [AppVersionController::class, 'show']);
+    Route::post('app-version', [AppVersionController::class, 'store'])->middleware(['auth.2fa']);
+    Route::put('app-version/{id}', [AppVersionController::class, 'update'])->middleware(['auth.2fa']);
+    Route::delete('app-version/{id}', [AppVersionController::class, 'destroy'])->middleware(['auth.2fa']);
+
+    Route::get('app-url', [AppUrlController::class, 'index']);
+    Route::get('app-url/{id}', [AppUrlController::class, 'show']);
+    Route::post('app-url', [AppUrlController::class, 'store'])->middleware(['auth.2fa']);
+    Route::put('app-url/{id}', [AppUrlController::class, 'update'])->middleware(['auth.2fa']);
+    Route::delete('app-url/{id}', [AppUrlController::class, 'destroy'])->middleware(['auth.2fa']);
+
     Route::apiResource('app-event-log', AppEventController::class);
-    Route::apiResource('app-url', AppUrlController::class);
-    Route::apiResource('region-blacklist', RegionBlacklistController::class);
-    Route::apiResource('region-whitelist', RegionWhitelistController::class);
+    //Route::apiResource('region-blacklist', RegionBlacklistController::class);
+    //Route::apiResource('region-whitelist', RegionWhitelistController::class);
 
     Route::get('url-handle-log', [UrlHandleLogController::class, 'index']);
     Route::get('url-handle-log/{id}', [UrlHandleLogController::class, 'show']);
-    Route::delete('url-handle-log/{id}', [UrlHandleLogController::class, 'destroy']);
-    Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle']);
+
+    Route::delete('url-handle-log/{id}', [UrlHandleLogController::class, 'destroy'])->middleware(['auth.2fa']);
+    Route::post('url-handle/{id}', [UrlHandleLogController::class, 'handle'])->middleware(['auth.2fa']);
 
     Route::post('upload/icon', [FileController::class, 'uploadIcon']);
     Route::post('upload/img', [FileController::class, 'uploadImage']);

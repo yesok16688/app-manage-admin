@@ -20,6 +20,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'two_face_secret_key'
     ];
 
     /**
