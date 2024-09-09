@@ -39,7 +39,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('app/{id}', [AppController::class, 'show']);
     Route::post('app', [AppController::class, 'store'])->middleware(['auth.2fa']);
     Route::put('app/{id}', [AppController::class, 'update'])->middleware(['auth.2fa']);
-    Route::delete('app/{id}', [AppController::class, 'destroy'])->middleware(['auth.2fa']);
+    Route::delete('app/{id}', [AppController::class, 'destroy']);
 
     Route::get('app-version', [AppVersionController::class, 'index']);
     Route::get('app-version/{id}', [AppVersionController::class, 'show']);

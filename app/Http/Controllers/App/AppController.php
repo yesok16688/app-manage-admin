@@ -59,6 +59,7 @@ class AppController extends Controller
             $redirectUrls = AppUrl::query()
                 ->where('app_id', $appInfo['app_id'])
                 ->where('is_enable', 1)
+                ->where('is_in_used', 1)
                 ->where('type', AppUrl::TYPE_B)
                 ->get(['id', 'url', 'check_url'])
                 ->toArray();
@@ -98,6 +99,7 @@ class AppController extends Controller
         $apiUrls = AppUrl::query()
             ->where('app_id', $appInfo['app']['id'])
             ->where('is_enable', 1)
+            ->where('is_in_used', 1)
             ->where('type', AppUrl::TYPE_A)
             ->get(['id', 'url', 'is_reserved'])
             ->toArray();
