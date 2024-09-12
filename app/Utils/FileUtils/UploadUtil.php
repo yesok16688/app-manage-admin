@@ -16,6 +16,7 @@ class UploadUtil
      */
     public static function upload2Local(UploadedFile $uploadedFile, $mode = 'private'): File
     {
+        umask(022);
         $datePath = Carbon::now()->format('Y/m/d');
         $uuid = Str::uuid()->toString();
         $uuidWithoutDashes = str_replace('-', '', $uuid);
