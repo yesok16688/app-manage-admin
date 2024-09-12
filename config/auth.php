@@ -112,4 +112,5 @@ return [
 
     'password_timeout' => 10800,
 
+    'encrypt_key_path' => env('ENCRYPT_KEY_PATH')
 ];

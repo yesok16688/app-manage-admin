@@ -6,12 +6,25 @@ use App\Exceptions\CodeException;
 use App\Http\Controllers\Controller;
 use App\Models\App;
 use App\Models\AppUrl;
+use App\Utils\CryptUtils\RsaUtil;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use OpenSSLAsymmetricKey;
 
 class AppUrlController extends Controller
 {
+    private RsaUtil $rsaUtil;
+    private OpenSSLAsymmetricKey $encryptKey;
+
+
+    public function __construct()
+    {
+        $this->rsaUtil = new RsaUtil();
+        $encryptKeyPath = config('auth.encrypt_key_path');
+        $this->encryptKey = openssl_pkey_get_private(file_get_contents($encryptKeyPath));
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -50,6 +63,18 @@ class AppUrlController extends Controller
             'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);
+
+        // 判断url是否RSA2048加密串，是则直接保存，不是则校验URL格式
+        if(strlen($data['url']) !== 344) {
+            $encryptData = $this->rsaUtil->encrypt($data['url'], $this->encryptKey);
+            $request->validate(['url' => 'url']);
+            $data['url'] = $encryptData;
+        }
+        if($data['check_url'] && strlen($data['check_url']) !== 344) {
+            $encryptData = $this->rsaUtil->encrypt($data['check_url'], $this->encryptKey);
+            $request->validate(['check_url' => 'url']);
+            $data['check_url'] = $encryptData;
+        }
         AppUrl::create($data);
         return $this->jsonResponse();
     }
@@ -76,6 +101,17 @@ class AppUrlController extends Controller
             'is_reserved' => 'required_if:type,0|in:0,1',
             'remark' => '',
         ]);
+        // 判断url是否RSA2048加密串，是则直接保存，不是则校验URL格式
+        if(strlen($data['url']) !== 344) {
+            $encryptData = $this->rsaUtil->encrypt($data['url'], $this->encryptKey);
+            $request->validate(['url' => 'url']);
+            $data['url'] = $encryptData;
+        }
+        if($data['check_url'] && strlen($data['check_url']) !== 344) {
+            $encryptData = $this->rsaUtil->encrypt($data['check_url'], $this->encryptKey);
+            $request->validate(['check_url' => 'url']);
+            $data['check_url'] = $encryptData;
+        }
         $info = AppUrl::query()->findOrFail($id);
         $info->update($data);
         return $this->jsonResponse();
