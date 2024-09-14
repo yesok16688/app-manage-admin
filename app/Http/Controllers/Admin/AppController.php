@@ -29,6 +29,7 @@ class AppController extends Controller
             ->when($request->get('channel'), function(Builder $query, $value) {
                 $query->where('channel', $value);
             })
+            ->orderByDesc('id')
             ->paginate($request->get('per_page'), ['*'], 'page', $request->get('current_page'))
             ->toArray();
 
